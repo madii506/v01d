@@ -1,38 +1,32 @@
 <!doctype html>
-<html lang="en" class="gate-on">
+<html lang="en" class="intro-on">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>v01d</title>
-<meta name="description" content="enter the world in private. a world on solana where every building is a working app and nobody has a name: launch on pump.fun with no wallet, swap on every dex, buy tokenized stocks, set limit orders, trade from a burner.">
+<meta name="description" content="enter the world in private. a world on solana where every building is a working app and nobody has a name: launch on meteora with no wallet, swap on every dex, buy tokenized stocks, set limit orders, trade from a burner.">
 <meta name="theme-color" content="#030304">
 <meta property="og:title" content="v01d">
 <meta property="og:description" content="enter the world in private.">
-<meta property="og:image" content="https://v01d.vercel.app/assets/img/og.jpg">
-<meta property="og:url" content="https://v01d.vercel.app/">
+<meta property="og:image" content="https://v01d-82yx.vercel.app/assets/img/og.jpg">
+<meta property="og:url" content="https://v01d-82yx.vercel.app/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="v01d">
 <meta name="twitter:description" content="enter the world in private.">
-<meta name="twitter:image" content="https://v01d.vercel.app/assets/img/og.jpg">
+<meta name="twitter:image" content="https://v01d-82yx.vercel.app/assets/img/og.jpg">
 <link rel="icon" href="/assets/img/mark-32.png?v=1" sizes="32x32">
 <link rel="icon" href="/assets/img/mark-64.png?v=1" sizes="64x64">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=1">
 <link rel="preload" href="/assets/fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/css/engine.css?v=1">
-<link rel="stylesheet" href="/assets/css/v01d.css?v=1">
+<link rel="stylesheet" href="/assets/css/engine.css?v=2">
+<link rel="stylesheet" href="/assets/css/v01d.css?v=2">
 </head>
 <body>
 <canvas id="w" aria-label="the world"></canvas>
 <noscript><p class="nojs">v01d is a 3D world and a working terminal. it needs javascript.</p></noscript>
 
-<!-- the gate: a hole in the dark. click it to go in -->
-<div id="gate" role="dialog" aria-label="enter">
-  <button type="button" id="enter" aria-label="enter the world">
-    <svg viewBox="-60 -60 120 120" aria-hidden="true"><circle r="34" class="g-hole"/><rect x="-46" y="-3.4" width="92" height="6.8" rx="1" class="g-slash" transform="rotate(-45)"/><circle r="50" class="g-ring"/></svg>
-  </button>
-  <p class="g-k" aria-hidden="true"><span>enter</span></p>
-  <button type="button" id="g-snd" class="g-snd" aria-pressed="false" aria-label="sound"><i></i><span>sound off</span></button>
-</div>
+<!-- during the intro: sound (off until you want it) and skip -->
+<button type="button" id="isnd" class="g-snd" aria-pressed="false" aria-label="sound" hidden><i></i><span>sound off</span></button>
 <button type="button" id="skip" hidden>skip ›</button>
 
 <!-- the world's heads-up: name, districts, signer, live feed, chain status, map -->
@@ -50,11 +44,7 @@
     </div>
   </header>
   <div id="labels" aria-hidden="true"></div>
-  <aside class="feed" id="feed" aria-label="new on pump.fun"><h4><i class="live"></i><span>born on pump.fun</span><em id="feed-at">—</em></h4><ol id="feed-l"></ol></aside>
-  <div class="dock">
-    <div class="net" id="net"><span><em>SOL</em><b id="n-sol">—</b></span><span><em>slot</em><b id="n-slot">—</b></span><span><em>tps</em><b id="n-tps">—</b></span><span><em>anons here</em><b id="n-here">—</b></span></div>
-    <svg class="mini" id="mini" viewBox="-100 -100 200 200" aria-label="map of the districts"></svg>
-  </div>
+  <aside class="feed" id="feed" aria-label="new on meteora"><h4><i class="live"></i><span>born on meteora</span><em id="feed-at">—</em></h4><ol id="feed-l"></ol></aside>
   <p class="w-hint" id="hint"><span class="hd">drag to look around · click a district · <kbd>ctrl k</kbd> goes anywhere</span><span class="hm">drag to look around · tap a district</span></p>
 </div>
 
@@ -80,6 +70,6 @@
 <div id="toast" role="status"></div>
 <div id="cmds" hidden></div>
 <script src="/assets/nacl-fast.min.js"></script>
-<script type="module" src="/assets/js/app.js?v=1"></script>
+<script type="module" src="/assets/js/app.js?v=2"></script>
 </body>
 </html>
