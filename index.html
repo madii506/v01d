@@ -19,7 +19,7 @@
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=1">
 <link rel="preload" href="/assets/fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/css/engine.css?v=2">
-<link rel="stylesheet" href="/assets/css/v01d.css?v=3">
+<link rel="stylesheet" href="/assets/css/v01d.css?v=4">
 </head>
 <body>
 <canvas id="w" aria-label="the world"></canvas>
@@ -29,7 +29,7 @@
 <button type="button" id="isnd" class="g-snd" aria-pressed="false" aria-label="sound" hidden><i></i><span>sound off</span></button>
 <button type="button" id="skip" hidden>skip ›</button>
 
-<!-- the world's heads-up: name, districts, signer, live feed, chain status, map -->
+<!-- the world's heads-up: name, districts, signer -->
 <div id="hud" hidden>
   <header class="top">
     <a class="brand" href="#/" aria-label="v01d, back to the landing">
@@ -44,7 +44,6 @@
     </div>
   </header>
   <div id="labels" aria-hidden="true"></div>
-  <aside class="feed" id="feed" aria-label="new on raydium"><h4><i class="live"></i><span>born on raydium</span><em id="feed-at">—</em></h4><ol id="feed-l"></ol></aside>
   <p class="w-hint" id="hint"><span class="hd">drag to look around · click a district · <kbd>ctrl k</kbd> goes anywhere</span><span class="hm">drag to look around · tap a district</span></p>
 </div>
 
@@ -70,6 +69,6 @@
 <div id="toast" role="status"></div>
 <div id="cmds" hidden></div>
 <script src="/assets/nacl-fast.min.js"></script>
-<script type="module" src="/assets/js/app.js?v=3"></script>
+<script type="module" src="/assets/js/app.js?v=4"></script>
 </body>
 </html>
