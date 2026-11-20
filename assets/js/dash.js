@@ -1,5 +1,5 @@
 // v01d · mission control: the console's home screen. Twelve live tiles fed by the same sources the terminal uses
-// (the chain, jupiter, meteora through jupiter's feed). Every number is real; when a feed is busy the tile says so.
+// (the chain, jupiter, raydium launchlab through jupiter's feed). Every number is real; when a feed is busy the tile says so.
 import { $, esc, api, usd, price, pct, ago, pic, short, sleep, block } from './core.js';
 import { spark } from './chart.js';
 import * as SG from './signer.js';
@@ -20,14 +20,14 @@ const HTML = `<div class="dash">
     <div class="drow"><span>tps <b data-x="tps">—</b></span><span>rpc <b data-x="rpc">—</b></span><span>router <b data-x="jup">—</b></span></div>`)}
   ${tile('net', 'network', '<em data-x="ep">epoch —</em>', `<div class="dkpi"><div><b data-x="tps2">—</b><span>transactions / s, not votes</span></div><div><b data-x="slot2">—</b><span>slot</span></div></div>
     <div class="dep"><div class="f" data-x="epl">epoch progress</div><span class="mbar"><i data-x="epb" style="width:0%"></i></span><div class="f" data-x="epe"></div></div><canvas class="dsp" data-x="tpsc"></canvas>`)}
-  ${tile('pump', 'meteora now', '<em data-x="pat">—</em>', `<div class="dkpi k3"><div><b data-x="born">—</b><span>born / min</span></div><div><b data-x="near">—</b><span>past 80% of the curve</span></div><div><b data-x="hot">—</b><span>trades 1h, top 60</span></div></div>
+  ${tile('pump', 'raydium now', '<em data-x="pat">—</em>', `<div class="dkpi k3"><div><b data-x="born">—</b><span>born / min</span></div><div><b data-x="near">—</b><span>past 80% of the curve</span></div><div><b data-x="hot">—</b><span>trades 1h, top 60</span></div></div>
     <div class="dnear" data-x="nearl">${sk(70)}</div><div class="dlast f" data-x="lastg"></div>`)}
   ${tile('maj', 'majors', '<em class="f">24h</em>', `<div class="dl" data-x="maj">${sk(150)}</div>`)}
   ${tile('mov', 'movers · 1h', '<em class="tok" data-run="trending 1h">all →</em>', `<div class="dl" data-x="mov">${sk(150)}</div>`)}
   ${tile('stk', 'stocks', '<em class="tok" data-run="stocks">all →</em>', `<div class="dl" data-x="stk">${sk(150)}</div>`)}
   ${tile('new', 'just born', '<em class="tok" data-run="scan">scanner →</em>', `<div class="dl" data-x="newl">${sk(150)}</div>`)}
   ${tile('grad', 'graduations', '<em class="tok" data-run="scan">scanner →</em>', `<div class="dl" data-x="gradl">${sk(150)}</div>`)}
-  ${tile('rate', 'births per minute', '<em class="f">since you opened this tab</em>', `<div class="dbars" data-x="bars"></div><div class="f dfh" data-x="rateh">counting the coins born on meteora while you watch…</div>`)}
+  ${tile('rate', 'births per minute', '<em class="f">since you opened this tab</em>', `<div class="dbars" data-x="bars"></div><div class="f dfh" data-x="rateh">counting the coins born on raydium while you watch…</div>`)}
   ${tile('fee', 'priority fees', '<em data-x="fslots"></em>', `<div class="dfee" data-x="fee">${sk(92)}</div><p class="f dfh" data-x="fh"></p>`)}
   ${tile('eng', 'launch engine', '', `<div class="dprv" data-x="eng">${sk(92)}</div>`)}
   ${tile('prv', 'this session', '<em data-x="sid"></em>', `<div class="dprv" data-x="prv"></div>`)}
@@ -109,7 +109,7 @@ function prvTile(q) {
   q('sid').textContent = window.__v01dSess ? 'sess ' + window.__v01dSess : '';
 }
 export function dashboard() {
-  const b = block('mission control <span class="f">· live from the chain, jupiter and meteora</span>', HTML);
+  const b = block('mission control <span class="f">· live from the chain, jupiter and raydium</span>', HTML);
   b.classList.add('dashblk'); b.querySelector('.bh').insertAdjacentHTML('beforeend', '<i class="live" style="margin-left:6px"></i>');
   const q = k => b.querySelector(`[data-x="${k}"]`);
   (async () => {
@@ -130,4 +130,4 @@ export function dashboard() {
   })();
   return b;
 }
-def('dash', 'system', 'dash', 'mission control: solana, the network, meteora, majors, movers, stocks, births, fees, the engine and this session, all live', () => { dashboard(); }, ['dashboard', 'mission']);
+def('dash', 'system', 'dash', 'mission control: solana, the network, raydium launchlab, majors, movers, stocks, births, fees, the engine and this session, all live', () => { dashboard(); }, ['dashboard', 'mission']);

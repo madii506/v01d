@@ -13,7 +13,7 @@ const FILES = {
   '/home/anon/readme.txt': () => `v01d · enter the world in private.
 
 a private world for solana. every building here is a working app:
-launches go to meteora, swaps route through every dex, orders live on
+launches go to raydium launchlab, swaps route through every dex, orders live on
 jupiter, and every transaction is signed by you (or a burner in this tab).
 
 start:
@@ -55,10 +55,10 @@ solana privacy rings are confidential, not anonymous.`,
 00:02  a creator key is born in your browser. you save it.
 00:04  a few seconds of proof of work on your device, instead of a login.
 00:05  the treasury pays for the launch. your wallet is never in it.
-00:06  the coin is live on meteora's bonding curve. no dev buy.
+00:06  the coin is live on raydium launchlab. no dev buy.
 later  type claim, load your key, claim the fees. the gas is paid for you.`,
   '/home/anon/commands.txt': () => Object.values(CMDS).filter(c => c.help).map(c => `${c.usage.padEnd(44)} ${c.help}`).join('\n'),
-  '/etc/v01d.conf': () => `network      = solana mainnet\nrouter       = jupiter (every dex)\nlaunchpad    = meteora dbc\ncookies      = 0\ntrackers     = 0\nthird_party  = 0\nsession      = forgotten on close\ncustody      = none\nsigner       = ${SG.activeKind()}`,
+  '/etc/v01d.conf': () => `network      = solana mainnet\nrouter       = jupiter (every dex)\nlaunchpad    = raydium launchlab\ncookies      = 0\ntrackers     = 0\nthird_party  = 0\nsession      = forgotten on close\ncustody      = none\nsigner       = ${SG.activeKind()}`,
   '/proc/session': () => `session  ${(() => { try { return sessionStorage.getItem('v01d:sess'); } catch { return '?'; } })()}\nuptime   ${Math.round((Date.now() - T0) / 1000)}s\ncommands ${RUNS}\nsigner   ${SG.state().active ? short(SG.state().active) : 'none'}`,
   '/dev/void': () => '',
 };
@@ -79,8 +79,8 @@ def('tree', 'system', 'tree', 'the whole filesystem', () => { const walk = (d, p
 def('echo', 'system', 'echo <text>', 'say something back', (a, raw) => line(esc(raw.replace(/^\S+\s?/, ''))));
 def('date', 'system', 'date', 'the time, in utc', () => line(esc(new Date().toUTCString())));
 def('uptime', 'system', 'uptime', 'how long this session has existed', () => line(`<span class="m">up ${Math.round((Date.now() - T0) / 1000)}s · ${RUNS} commands · forgotten on close</span>`));
-def('uname', 'system', 'uname', 'the system', () => line('v01d 1.0 void solana-mainnet jupiter meteora'));
-def('neofetch', 'system', 'neofetch', 'the void, and the system', () => { const d = document.createElement('pre'); d.className = 'ascii ln'; d.textContent = HOOD; $('#out').appendChild(d); line(`<span class="h">anon@void</span> <span class="f">· os v01d 1.0 · network solana · launch meteora · router jupiter · you nobody</span>`); }, ['fetch']);
+def('uname', 'system', 'uname', 'the system', () => line('v01d 1.0 void solana-mainnet jupiter raydium'));
+def('neofetch', 'system', 'neofetch', 'the void, and the system', () => { const d = document.createElement('pre'); d.className = 'ascii ln'; d.textContent = HOOD; $('#out').appendChild(d); line(`<span class="h">anon@void</span> <span class="f">· os v01d 1.0 · network solana · launch raydium · router jupiter · you nobody</span>`); }, ['fetch']);
 for (const [n, msg] of [['rm', 'nothing to remove. you were never here.'], ['touch', 'read-only. nothing you do here leaves a mark.'], ['mkdir', 'read-only. nothing you do here leaves a mark.'], ['ssh', 'no. you are already inside.'], ['ping', 'pong. nobody is listening.'], ['hack', 'there is nothing to hack. there is no one here.'], ['vim', 'you are already in the only editor that matters.'], ['nano', 'you are already in the only editor that matters.']]) def(n, 'system', n, '', () => line(`<span class="d">${esc(msg)}</span>`));
 
 // ---------------------------------------------------------------- inspect

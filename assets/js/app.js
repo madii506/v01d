@@ -239,7 +239,7 @@ async function feed() {
     const j = await api('pulse'); const list = (j.fresh || []).slice(0, 7);
     let fresh = 0; list.forEach(t => { if (!SEENM.has(t.mint)) { SEENM.add(t.mint); fresh++; } });
     if (!feedFirst && fresh) { if (V) V.beacon(); soundPing(); }
-    { const now = Date.now(), all = j.fresh || [], m = all.filter(t => now - Date.parse(t.created) < 60000).length; tag('radar', m ? `${m}${m >= all.length && all.length >= 20 ? '+' : ''} born in the last minute` : 'watching meteora'); }
+    { const now = Date.now(), all = j.fresh || [], m = all.filter(t => now - Date.parse(t.created) < 60000).length; tag('radar', m ? `${m}${m >= all.length && all.length >= 20 ? '+' : ''} born in the last minute` : 'watching raydium'); }
     feedFirst = false;
     $('#feed-l').innerHTML = list.map(t => `<li><button type="button" data-run="token ${esc(t.mint)}"><b>${esc(t.sym || short(t.mint))}</b><span>${esc((t.name || '').slice(0, 22))}</span><em>${usd(t.mcap)}</em><i>${ago(t.created)}</i></button></li>`).join('') || '<li class="d">quiet</li>';
     $('#feed-at').textContent = new Date(j.at || Date.now()).toLocaleTimeString('en-GB');

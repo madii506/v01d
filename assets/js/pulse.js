@@ -1,4 +1,4 @@
-// v01d · the scanner: every coin born on meteora as it is born, as it climbs the curve, and as it graduates. Refreshes every
+// v01d · the scanner: every coin born on raydium launchlab as it is born, as it climbs the curve, and as it graduates. Refreshes every
 // few seconds while you watch; new coins slide in at the top, numbers that move flash.
 import { $, esc, api, usd, pct, ago, amt, img, pic, imgSet } from './core.js';
 let RUN = () => {}; export const setPulseRunner = f => { RUN = f; };
@@ -9,7 +9,7 @@ let QB = ls('v01d:qb', 0.1); const F = Object.assign({ x: false, dev: false, top
 const FILTERS = [['x', 'has socials', t => !!(t.twitter || t.website)], ['dev', 'no serial devs', t => !(t.devMints >= 20)], ['top', 'top10 < 30%', t => !(t.top10 > 30)], ['bnd', 'no bundles', t => !t.bundles]];
 const pass = t => FILTERS.every(([k, , f]) => !F[k] || f(t));
 const fmtQ = v => String(+(+v).toFixed(4));
-const COLS = [['fresh', 'new', 'just launched'], ['soon', 'final stretch', 'about to graduate'], ['grad', 'graduated', 'on a meteora pool now']];
+const COLS = [['fresh', 'new', 'just launched'], ['soon', 'final stretch', 'about to graduate'], ['grad', 'graduated', 'on a raydium pool now']];
 const pc = v => Math.round(v) + '%';
 // the small print every trencher checks first: top 10 share, how many coins this dev has made, bots, bundles, socials
 function chips(t) {
@@ -86,8 +86,8 @@ function render(j0) {
         const now = Date.now(), ts = (j0.fresh || []).map(t => Date.parse(t.created)).filter(Number.isFinite), last5 = ts.filter(x => now - x < 300000).length;
         const watched = Math.min(5, (now - T0) / 60000), sorted = ts.slice(0, 30).sort((a, b) => a - b), span = sorted.length > 5 ? (sorted[sorted.length - 1] - sorted[0]) / 60000 : 0;
         const rate = watched >= 4.5 ? last5 / 5 : span > 0 ? (sorted.length - 1) / span : 0, r = $('#pz-fresh .pz-rate');
-        r.textContent = rate ? '≈' + Math.round(rate) + '/min' : ''; r.title = 'coins born per minute on meteora';
-        const pn = $('#pz-fresh .pz-n'); pn.textContent = `${EVER.size} seen`; pn.title = 'coins born on meteora since you opened the scanner';
+        r.textContent = rate ? '≈' + Math.round(rate) + '/min' : ''; r.title = 'coins born per minute on raydium launchlab';
+        const pn = $('#pz-fresh .pz-n'); pn.textContent = `${EVER.size} seen`; pn.title = 'coins born on raydium since you opened the scanner';
       }
       if (sec.matches(':hover') && have.size) { for (const t of j[k]) { const el = have.get(t.mint); if (el) patch(el, t, k); } sec.classList.add('held'); continue; }
       sec.classList.remove('held'); list.querySelectorAll('.sk,.pz-e').forEach(e => e.remove());
@@ -104,7 +104,7 @@ function render(j0) {
         if (ref === el) ref = el.nextElementSibling; else list.insertBefore(el, ref);
       }
     }
-    first = false; $('#pz-at').textContent = 'live · ' + new Date(j.at).toLocaleTimeString('en-GB'); $('#pz-src').textContent = j.src === 'jupiter' ? 'meteora · live via jupiter' : 'meteora · curves read from the chain';
+    first = false; $('#pz-at').textContent = 'live · ' + new Date(j.at).toLocaleTimeString('en-GB'); $('#pz-src').textContent = j.src === 'jupiter' ? 'raydium launchlab · live via jupiter' : 'raydium launchlab · curves read from the chain';
     const hid = COLS.reduce((a, [k]) => a + (j0[k] || []).length - j[k].length, 0); $('#pz-hid').textContent = hid ? `${hid} hidden by filters` : '';
   }
 }
@@ -112,7 +112,7 @@ export function startPulse() {
   const box = $('#pulsebox');
   if (!box.dataset.built) {
     box.dataset.built = '1';
-    box.innerHTML = `<div class="pz-h"><b>scanner</b><span id="pz-src">meteora · live</span><span class="pz-f">${FILTERS.map(([k, l]) => `<button type="button" data-f="${k}" class="${F[k] ? 'on' : ''}">${l}</button>`).join('')}<span id="pz-hid" class="f"></span></span><label class="pz-qb" title="quick buy size, in SOL">quick buy <input id="pz-qb" type="text" inputmode="decimal" value="${fmtQ(QB)}" maxlength="6" spellcheck="false"> SOL</label><em id="pz-at">connecting…</em></div><div class="pz-g">${COLS.map(([k, t, s]) => `<section id="pz-${k}" class="pz-c"><h5><b>${t}</b><span>${s}</span><u class="pz-rate"></u><s>paused</s><i class="pz-n">0</i></h5><div class="pz-l" data-lenis-prevent>${Array.from({ length: 5 }, () => '<div class="sk" style="height:78px;margin:8px"></div>').join('')}</div></section>`).join('')}</div>`;
+    box.innerHTML = `<div class="pz-h"><b>scanner</b><span id="pz-src">raydium launchlab · live</span><span class="pz-f">${FILTERS.map(([k, l]) => `<button type="button" data-f="${k}" class="${F[k] ? 'on' : ''}">${l}</button>`).join('')}<span id="pz-hid" class="f"></span></span><label class="pz-qb" title="quick buy size, in SOL">quick buy <input id="pz-qb" type="text" inputmode="decimal" value="${fmtQ(QB)}" maxlength="6" spellcheck="false"> SOL</label><em id="pz-at">connecting…</em></div><div class="pz-g">${COLS.map(([k, t, s]) => `<section id="pz-${k}" class="pz-c"><h5><b>${t}</b><span>${s}</span><u class="pz-rate"></u><s>paused</s><i class="pz-n">0</i></h5><div class="pz-l" data-lenis-prevent>${Array.from({ length: 5 }, () => '<div class="sk" style="height:78px;margin:8px"></div>').join('')}</div></section>`).join('')}</div>`;
     box.querySelector('.pz-f').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; e.stopPropagation(); F[b.dataset.f] = !F[b.dataset.f]; b.classList.toggle('on', F[b.dataset.f]); lsSet('v01d:pzf', F); if (LAST) render(LAST); });
     const qb = box.querySelector('#pz-qb'); qb.addEventListener('click', e => e.stopPropagation());
     qb.addEventListener('input', () => { const v = parseFloat(qb.value); if (v > 0 && v <= 100) { QB = v; lsSet('v01d:qb', QB); box.querySelectorAll('[data-q]').forEach(b => { b.textContent = (b.dataset.q === '1' ? 'buy ' : '') + fmtQ(QB * b.dataset.q); }); } });

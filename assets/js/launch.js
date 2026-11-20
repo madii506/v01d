@@ -23,7 +23,7 @@ function pow(challenge, bits, onP) { return new Promise((res, rej) => { const w 
 
 export function launchForm(wallet) {
   const S = { image: null, key: null, mode: wallet ? 'wallet' : 'key' };
-  const b = block(wallet ? 'launch --wallet · meteora · your wallet signs and can buy first' : 'launch · meteora · private, free, no wallet', `
+  const b = block(wallet ? 'launch --wallet · raydium · your wallet signs and can buy first' : 'launch · raydium · private, free, no wallet', `
     <div class="f2">
       <label class="fl">name<input name="name" maxlength="32" placeholder="My Coin"></label>
       <label class="fl">ticker<input name="symbol" maxlength="10" placeholder="COIN"></label>
@@ -35,7 +35,7 @@ export function launchForm(wallet) {
     <div class="imgrow" style="margin-top:12px"><div class="pv" data-pv>image</div><div class="row"><button type="button" class="btn ghost sm" data-pick>choose image</button><input type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden data-file><span class="d" data-info>redrawn here. its hidden data never leaves your device.</span></div></div>
     <div class="seg" data-seg>${wallet ? '<button type="button" class="on" data-m="wallet">your wallet</button>' : '<button type="button" class="on" data-m="key">a key born here</button><button type="button" data-m="own">an address I own</button>'}</div>
     <div data-modebox></div>
-    <div class="row" style="margin-top:12px"><button type="button" class="btn" data-go>${wallet ? 'sign &amp; launch' : 'launch'}</button><span class="d">${wallet ? 'your wallet pays meteora and any dev buy' : 'free. nothing to connect, sign or pay.'}</span></div>
+    <div class="row" style="margin-top:12px"><button type="button" class="btn" data-go>${wallet ? 'sign &amp; launch' : 'launch'}</button><span class="d">${wallet ? 'your wallet pays raydium and any dev buy' : 'free. nothing to connect, sign or pay.'}</span></div>
     <div class="err" data-err></div>`);
   const q = s => b.querySelector(s), fld = n => q(`[name=${n}]`).value.trim(), err = t => { q('[data-err]').textContent = t || ''; };
   q('[data-pick]').onclick = () => q('[data-file]').click();
@@ -80,7 +80,7 @@ async function privateLaunch(f, S, creator) {
   H.innerHTML = `<span class="o">✓</span> ${dots('proof of work', `<span class="c">found in ${((performance.now() - t0) / 1000).toFixed(1)}s</span>`)}`;
   line(`<span class="o">✓</span> ${dots('clean image', `<span class="c">${Math.round(S.image.bytes / 1024)} KB, no metadata</span>`)}`);
   line(`<span class="o">✓</span> ${dots('creator', `<span class="c">${short(creator)}</span> <span class="f">(${S.mode === 'own' ? 'your own address' : 'born in this browser'})</span>`)}`);
-  const T = spinner('the engine pays the launch · meteora bonding curve');
+  const T = spinner('the engine pays the launch · raydium launchlab');
   const j = await api('launch', { method: 'POST', body: { ...f, image: S.image.dataUrl, creator, pow: { challenge: ch.challenge, nonce: res.nonce } } });
   T.done(`<span class="o">✓</span> ${dots('launch', '<span class="c">sent</span>')}`);
   line(dots('mint', `<span class="h">${j.mint}</span>`));

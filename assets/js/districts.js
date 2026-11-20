@@ -20,7 +20,7 @@ const priv = t => `<p class="priv"><i></i>${t}</p>`;
 export const DIST = {
   launch: {
     tag: 'the mint',
-    line: 'a coin on meteora\'s bonding curve with no wallet, no signature and no SOL. the engine pays the launch, your picture is wiped of its metadata, and the creator key is born in this tab. at ~420 SOL market cap it graduates into a meteora pool with its liquidity locked forever.',
+    line: 'a coin on raydium launchlab with no wallet, no signature and no SOL. the engine pays the launch, your picture is wiped of its metadata, and the creator key is born in this tab. once its curve has raised 85 SOL it graduates into a raydium pool: half the liquidity burned, half locked for good.',
     ui: () => `<div class="row2">${btn('launch', 'launch privately', 'pri')}${btn('launch --wallet', 'launch from a wallet or burner')}</div>
       <div class="row2">${btn('coins', 'coins born here')}${btn('claim', 'claim creator fees')}${btn('cat launch.txt', 'how it works')}</div>
       ${priv('no wallet of yours touches a private launch. the engine pays and signs it; your key only ever claims.')}`,
@@ -53,7 +53,7 @@ export const DIST = {
   },
   radar: {
     tag: 'the watchtower',
-    line: 'every coin born on meteora the moment it appears, the final stretch before graduation, what is trending, and a full report on anything: holders, authorities, liquidity, a risk read.',
+    line: 'every coin born on raydium launchlab (bonk.fun\'s too) the moment it appears, the final stretch before graduation, what is trending, and a full report on anything: holders, authorities, liquidity, a risk read.',
     ui: () => `<form class="fx" id="f-rd">${field('rd-q', 'ticker, name or mint')}<button class="pa pri" data-k="token">report</button><button class="pa" data-k="chart">chart</button><button class="pa" data-k="holders">holders</button><button class="pa" data-k="tape">tape</button></form>
       <div class="row2"><button type="button" class="pa pri" data-tab="pulse">live scanner</button>${btn('trending 5m', 'trending 5m')}${btn('trending 1h', '1h')}${btn('trending 24h', '24h')}${btn('new', 'just born')}${btn('watchlist', 'watchlist')}</div>`,
     wire: (root, run) => {
@@ -120,10 +120,10 @@ export function manual() {
     <p>a world on solana where every building is a working app and nobody has a name. you walk in, you launch, you trade, and nothing you do here points back at you.</p>
     <p>up there is the surface: an endless white room where every tile is watched, the way every wallet on a public chain is. down here is the void. you got here through the hole.</p></section>
   <section><h2><em>02</em>the districts</h2><ul class="dl">
-    ${d('launch', 'launch', 'a coin on meteora with no wallet, no signature and no SOL, or from a wallet with a first buy. claim its creator fees later.')}
+    ${d('launch', 'launch', 'a coin on raydium launchlab with no wallet, no signature and no SOL, or from a wallet with a first buy. claim its creator fees later.')}
     ${d('swap', 'swap', 'any token to any token across every solana dex. buy, sell, quote, track what you hold.')}
     ${d('stocks', 'stocks', 'tokenized stocks with SOL, any hour of the day.')}
-    ${d('radar', 'radar', 'every meteora birth in real time, trending boards, full token reports, charts and tapes.')}
+    ${d('radar', 'radar', 'every raydium launchlab birth in real time, trending boards, full token reports, charts and tapes.')}
     ${d('orders', 'orders', 'limit orders and dca plans that live on jupiter and fill while you sleep.')}
     ${d('locker', 'locker', 'burner wallets born in your tab, wallet connect, sends.')}
     ${d('scan', 'scan', 'what this page and the chain can see about you, and a button to forget it all.')}
@@ -135,18 +135,18 @@ export function manual() {
     <li><b>00:02</b>a creator key is born in your browser. you save it; v01d never sees it.</li>
     <li><b>00:04</b>a few seconds of proof of work on your device instead of a login, so nobody can drain the engine.</li>
     <li><b>00:05</b>the engine pays for the launch out of its treasury, in one transaction. your wallet is never in it.</li>
-    <li><b>00:06</b>the coin is live on meteora's dynamic bonding curve. no dev buy, so everyone starts at the same price.</li>
-    <li><b>~420 SOL</b>it graduates into a meteora pool. the liquidity is locked forever: 80% of it is the creator's, 20% v01d's.</li>
+    <li><b>00:06</b>the coin is live on raydium launchlab, inside v01d's own launchpad there. no dev buy, so everyone starts at the same price.</li>
+    <li><b>85 SOL</b>once its curve has raised 85 SOL it graduates into a raydium pool. half the liquidity is burned, half locked for good.</li>
     <li><b>later</b>load your key in the launch district and claim the fees. the network fee is paid for you.</li></ol></section>
-  <section><h2><em>04</em>the curve, on meteora</h2>
-    <p>every coin born here lives on meteora's dynamic bonding curve, the same engine under bags and jupiter studio. one curve for every coin, written on chain once and shared:</p>
+  <section><h2><em>04</em>the curve, on raydium</h2>
+    <p>every coin born here lives on raydium launchlab, the launch engine under bonk.fun, inside v01d's own launchpad there (a launchlab platform the treasury opens once). the same rules for every coin, enforced by raydium's program, not by v01d:</p>
     <table class="pt"><tbody>
-    ${row('supply', '1,000,000,000 tokens, 6 decimals. nobody can mint more and the metadata is frozen.')}
-    ${row('starts at', 'about 30 SOL of market cap. no dev buy on a private launch, so everyone starts at the same price.')}
-    ${row('graduates at', 'about 420 SOL of market cap. the curve moves its SOL and tokens into a meteora DAMM v2 pool.')}
-    ${row('after graduation', 'the pool\'s liquidity is locked forever. 80% of the locked position belongs to the creator, 20% to v01d; both earn its fees.')}
-    ${row('trading fee', '1% on the curve. meteora keeps its protocol cut; of the rest, 80% is the creator\'s and 20% refills the treasury that pays for free launches.')}
-    ${row('creator fees', 'they wait in the coin\'s pool until the creator key claims them. type claim, load the key file, done; the network fee is paid for you.')}
+    ${row('supply', '1,000,000,000 tokens, 6 decimals, all of it minted into the curve at birth. no team allocation.')}
+    ${row('on the curve', '793,100,000 tokens (79.31%) sold along a constant-product curve, starting at about 28 SOL of market cap. no dev buy on a private launch, so everyone starts at the same price.')}
+    ${row('graduates at', '85 SOL raised, about 400 SOL of market cap. the SOL and the rest of the tokens move into a raydium CPMM pool.')}
+    ${row('after graduation', 'half of the pool\'s LP is burned. the other half is locked for good; its trading fees go to the treasury.')}
+    ${row('trading fee', '1% on the curve: 0.5% to the coin\'s creator, 0.25% to the treasury that pays for free launches, 0.25% to raydium.')}
+    ${row('creator fees', 'they collect in one vault per creator key, from every coin that key made. type claim, load the key file, done; the network fee is paid for you.')}
     </tbody></table></section>
   <section><h2><em>05</em>what stays hidden, what stays public</h2>
     <table class="pt"><thead><tr><th>hidden</th><th>still public</th></tr></thead><tbody>
@@ -162,7 +162,7 @@ export function manual() {
   <section><h2><em>06</em>honest limits</h2><ul class="lim">
     <li>a burner funded straight from your main wallet is linked to it, forever. fund it some other way.</li>
     <li>tokenized stocks track a share price. they are not shares in your name, and their issuers can pause or freeze them.</li>
-    <li>free launches run while the engine's treasury has SOL. 20% of every coin's curve fees flows back into it; when it runs low anyway, launches pause until it is topped up, and the launch district says so.</li>
+    <li>free launches run while the engine's treasury has SOL. 0.25% of every trade on the curve flows back into it; when it runs low anyway, launches pause until it is topped up, and the launch district says so.</li>
     <li>a coin graduates only if people buy it up the curve. most never do.</li>
     <li>a limit order needs about $5, a dca plan about $100. those are jupiter's minimums, not ours.</li>
     <li>most memecoins go to zero. nothing in v01d is advice.</li></ul></section>

@@ -36,8 +36,8 @@ const tokLink = t => `<span class="tok" data-run="token ${esc(t.mint)}"><b>${esc
 const icon = t => pic(t);
 
 // ---------------------------------------------------------------- LAUNCH
-def('launch', 'launch', 'launch [--wallet]', 'a coin on meteora\'s bonding curve. private and free by default; --wallet signs, pays and can buy first', a => {
-  if (a.includes('--raydium') || a.includes('--bonk') || a.includes('--stonk')) { line('<span class="w">!</span> <span class="m">stonk.fun and bonk.fun launch only through their own sites. v01d launches on meteora: privately (free) or from your wallet.</span>'); }
+def('launch', 'launch', 'launch [--wallet]', 'a coin on raydium launchlab. private and free by default; --wallet signs, pays and can buy first', a => {
+  if (a.includes('--bonk') || a.includes('--stonk') || a.includes('--pump')) { line('<span class="w">!</span> <span class="m">bonk.fun, stonk.fun and pump.fun launch only through their own sites. v01d launches on raydium launchlab, in its own launchpad: privately (free) or from your wallet.</span>'); }
   launchForm(a.includes('--wallet') || a.includes('wallet'));
 });
 def('coins', 'launch', 'coins', 'every coin launched on v01d', () => coinsTable());
@@ -85,7 +85,7 @@ def('ca', 'system', 'ca', 'the v01d contract address: copy it, buy it, chart it'
   line(`<span class="d">ca</span>  <span class="c">${CA}</span>`);
   line(`<span class="tok c" data-copy="${CA}">copy</span> · <span class="tok c" data-run="buy ${CA} 0.1">buy 0.1</span> · <span class="tok c" data-run="chart ${CA}">chart</span> · <span class="tok c" data-run="token ${CA}">report</span>`);
 }, ['contract', 'address']);
-def('buy', 'trade', 'buy <token> <sol>', 'buy any token or any coin born on meteora with SOL', async a => {
+def('buy', 'trade', 'buy <token> <sol>', 'buy any token or any coin born on raydium with SOL', async a => {
   need(a.length >= 2, 'Try: buy bonk 0.1  ·  buy <mint> 0.25');
   let [t, sol] = a; if (/^\d*\.?\d+$/.test(t) && !/^\d*\.?\d+$/.test(sol)) [t, sol] = [sol, t];
   await quoteBlock({ amount: sol, from: 'sol', to: t, title: `buy · ${esc(sol)} SOL of ${esc(t)}` });
@@ -319,7 +319,7 @@ function tokenTable(title, list, cols = 'mcap') {
   b.querySelectorAll('[data-c]').forEach(x => x.onclick = () => RUN(x.dataset.c)); return b;
 }
 def('trending', 'market', 'trending [5m|1h|6h|24h]', 'what is moving on solana right now', async a => { const w = ['5m', '1h', '6h', '24h'].includes(a[0]) ? a[0] : '1h'; const sp = spinner(`top trending · ${w}`); const j = await api('trending', { params: { w } }); sp.done(`<span class="o">✓</span> ${dots('trending', `<span class="c">${j.tokens.length} tokens · ${w}</span>`)}`); tokenTable(`trending · ${w}`, j.tokens.slice(0, 25)); }, ['hot', 'top']);
-def('new', 'market', 'new', 'the newest coins born on meteora', async () => { const sp = spinner('newest on meteora'); const j = await api('recent'); sp.done(`<span class="o">✓</span> ${dots('new', `<span class="c">${j.tokens.length} fresh coins</span>`)}`); tokenTable('new on meteora', j.tokens.slice(0, 25)); }, ['fresh']);
+def('new', 'market', 'new', 'the newest coins born on raydium launchlab', async () => { const sp = spinner('newest on raydium'); const j = await api('recent'); sp.done(`<span class="o">✓</span> ${dots('new', `<span class="c">${j.tokens.length} fresh coins</span>`)}`); tokenTable('new on raydium', j.tokens.slice(0, 25)); }, ['fresh']);
 def('stocks', 'market', 'stocks', 'tokenized stocks you can buy with SOL (TSLAx, NVDAx, SPYx…)', async () => { const sp = spinner('tokenized stocks'); const j = await api('stocks'); sp.done(`<span class="o">✓</span> ${dots('stocks', `<span class="c">${j.tokens.length} listed</span>`)}`); tokenTable('tokenized stocks · buy with SOL, no broker', j.tokens.slice(0, 30)); line('<span class="d">buy one with</span> <span class="c">buy tslax 0.5</span> <span class="d">· stock tokens can be paused by their issuer; they are not shares in your name.</span>'); }, ['stonks', 'stonk']);
 def('search', 'market', 'search <query>', 'find tokens by name, ticker or mint', async a => { need(a[0], 'Try: search dog'); const sp = spinner(`searching ${esc(a.join(' '))}`); const j = await api('search', { params: { q: a.join(' ') } }); sp.done(`<span class="o">✓</span> ${dots('results', `<span class="c">${j.tokens.length}</span>`)}`); if (j.tokens.length) tokenTable(`search · ${esc(a.join(' '))}`, j.tokens); }, ['find', 's']);
 def('holders', 'market', 'holders <token>', 'the 20 biggest holders and how much of the supply they have', async a => {
@@ -355,7 +355,7 @@ def('rings', 'privacy', 'rings', 'what v01d hides, and exactly what stays public
   for (let i = 0; i < RINGS.length; i++) { const [t, d, p] = RINGS[i]; line(`<span class="h">${String(i + 1).padStart(2, '0')}</span>  <span class="c">${esc(t)}</span>`); line(`    <span class="m">${esc(d)}</span>`); line(`    <span class="f">still public: ${esc(p)}</span>`); await sleep(90); }
   line(''); line('<span class="d">solana privacy rings (helius) encrypt balances and amounts. senders and receivers stay public, and a withdrawal shows its amount. confidential, not anonymous.</span>');
 }, ['layers']);
-def('scan', 'market', 'scan', 'the live scanner: new coins on meteora, the final stretch, and fresh graduations, in real time', () => { showTab('pulse'); line('<span class="o">✓</span> scanner open <span class="f">(scanner tab · refreshes every few seconds)</span>'); }, ['pulse', 'scanner', 'live']);
+def('scan', 'market', 'scan', 'the live scanner: new coins on raydium launchlab, the final stretch, and fresh graduations, in real time', () => { showTab('pulse'); line('<span class="o">✓</span> scanner open <span class="f">(scanner tab · refreshes every few seconds)</span>'); }, ['pulse', 'scanner', 'live']);
 def('privacy', 'privacy', 'privacy', 'check this page live: cookies, storage, and every host it talks to', () => {
   let ls = 0; try { ls = localStorage.length; } catch {}
   const hosts = [...new Set(performance.getEntriesByType('resource').map(e => { try { return new URL(e.name).host; } catch { return ''; } }).filter(Boolean))];
@@ -395,7 +395,7 @@ def('status', 'system', 'status', 'the engine, the chain and the router, live', 
 def('intro', 'system', 'intro', 'play the intro again', () => { window.dispatchEvent(new Event('v01d:intro')); });
 def('sound', 'system', 'sound [on|off]', 'the room tone, on or off', a => { window.dispatchEvent(new CustomEvent('v01d:sound', { detail: a[0] || 'toggle' })); });
 def('docs', 'system', 'docs', 'how everything works, in plain words', () => { window.dispatchEvent(new CustomEvent('v01d:go', { detail: 'library' })); line('<span class="d">opening the library</span>'); });
-def('about', 'system', 'about', 'what v01d is', () => { line('<span class="h">v01d</span> <span class="m">· enter the world in private.</span>'); line('<span class="m">a private world for solana. launch on meteora with no wallet, swap on every dex, buy tokenized stocks, set limit orders and dca, claim fees, trade from a burner.</span>'); line('<span class="f">independent. not affiliated with meteora, jupiter, helius, phantom or any token here. nothing here is advice; memecoins mostly go to zero.</span>'); });
+def('about', 'system', 'about', 'what v01d is', () => { line('<span class="h">v01d</span> <span class="m">· enter the world in private.</span>'); line('<span class="m">a private world for solana. launch on raydium with no wallet, swap on every dex, buy tokenized stocks, set limit orders and dca, claim fees, trade from a burner.</span>'); line('<span class="f">independent. not affiliated with raydium, jupiter, helius, phantom or any token here. nothing here is advice; memecoins mostly go to zero.</span>'); });
 def('gm', 'system', 'gm', 'gm', () => line('gm. nobody saw that.'));
 def('sudo', 'system', 'sudo', '', () => line('<span class="r">nice try.</span> <span class="d">there is no root here. there is no you here.</span>'));
 def('exit', 'system', 'exit', '', () => line('<span class="d">there is no exit. close the tab and you were never here.</span>'));
