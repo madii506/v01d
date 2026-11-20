@@ -344,7 +344,13 @@ module.exports = async (req, res) => {
       if (L.limited('dry:' + L.ip(req), 5, 600000)) throw L.err(429, 'Slow down a little.');
       const id = 'dry' + newId(), k = await C.keys(id), o = origin(req);
       const kp = (await C.keys('dry-creator:' + id)).mint.publicKey.toBase58();
-      const sim = await C.simulateLaunch({ id, name: 'v01d dry run', symbol: 'DRY', uri: `${o}/m/${id}`, creator: kp }, { dry: true });
+      let sim;
+      try { sim = await C.simulateLaunch({ id, name: 'v01d dry run', symbol: 'DRY', uri: `${o}/m/${id}`, creator: kp }, { dry: true }); }
+      catch (e) {   // a diagnostic: say what broke (never a URL, which could carry an RPC key)
+        if (e.code && Number.isInteger(e.code)) throw e;
+        console.error(e);
+        return L.send(res, 500, { ok: false, dryRun: true, error: String(e && e.message || e).replace(/https?:\/\/\S+/g, '[url]').slice(0, 240) });
+      }
       return L.send(res, 200, { ok: true, dryRun: true, venue: 'meteora dbc', config: await C.configAddress(), configLive: await C.configExists(), payer: sim.payer, mint: k.mint.publicKey.toBase58(), creator: kp, result: sim, costSol: sim.ok ? sol(sim.need) : null });
     }
     if (op === 'tick') {

@@ -32,7 +32,16 @@ async function rpc(fn) {
   const m = String(last && last.message || last || '');
   throw L.err(502, 'Solana RPC is busy right now. Try again in a moment.', { detail: m.slice(0, 160) });
 }
-const client = () => CL || (CL = new (dbc().DynamicBondingCurveClient)(connections()[0], 'confirmed'));
+const CLS = new Map();
+const clientFor = c => { let cl = CLS.get(c); if (!cl) { cl = new (dbc().DynamicBondingCurveClient)(c, 'confirmed'); CLS.set(c, cl); } return cl; };
+const client = () => CL || (CL = clientFor(connections()[0]));
+// Meteora SDK builders read the chain too (the quote mint, the epoch, a config): on a network failure try the next RPC.
+const NETERR = /fetch|network|timed? ?out|abort|429|50[234]|ECONN|socket|rate.?limit|too many|failed to get|ENOTFOUND|EAI_AGAIN/i;
+async function sdk(fn) {
+  let last;
+  for (const c of connections()) { try { return await fn(clientFor(c)); } catch (e) { last = e; if (!NETERR.test(String(e && e.message || e))) throw e; } }
+  throw L.err(502, 'Solana RPC is busy right now. Try again in a moment.', { detail: String(last && last.message || last).slice(0, 160) });
+}
 
 const B58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 function b58enc(buf) { let n = 0n; for (const b of buf) n = n * 256n + BigInt(b); let s = ''; while (n > 0n) { s = B58[Number(n % 58n)] + s; n /= 58n; } for (const b of buf) { if (b === 0) s = '1' + s; else break; } return s; }
@@ -112,7 +121,7 @@ async function configExists() {
 async function configIxs(payer) {
   const { PublicKey } = w3(); const k = await keys();
   const tre = k.treasury.publicKey;
-  const tx = await client().partner.createConfig({ ...curve(), config: k.config.publicKey, feeClaimer: tre, leftoverReceiver: tre, quoteMint: new PublicKey(SOL_MINT), payer });
+  const tx = await sdk(cl => cl.partner.createConfig({ ...curve(), config: k.config.publicKey, feeClaimer: tre, leftoverReceiver: tre, quoteMint: new PublicKey(SOL_MINT), payer }));
   return noCb(tx);
 }
 async function ensureConfig() {
@@ -134,8 +143,8 @@ async function poolIxs(rec, { payer, poolCreator, mint, buyLamports = 0 }) {
   const BN = require('bn.js'); const k = await keys();
   const createPoolParam = { name: rec.name, symbol: rec.symbol, uri: rec.uri, payer, poolCreator, config: k.config.publicKey, baseMint: mint };
   const tx = buyLamports > 0
-    ? await client().pool.createPoolWithFirstBuy({ createPoolParam, firstBuyParam: { buyer: poolCreator, buyAmount: new BN(String(buyLamports)), minimumAmountOut: new BN(1), referralTokenAccount: null } })
-    : await client().pool.createPool(createPoolParam);
+    ? await sdk(cl => cl.pool.createPoolWithFirstBuy({ createPoolParam, firstBuyParam: { buyer: poolCreator, buyAmount: new BN(String(buyLamports)), minimumAmountOut: new BN(1), referralTokenAccount: null } }))
+    : await sdk(cl => cl.pool.createPool(createPoolParam));
   return noCb(tx);
 }
 // Dry run: what the treasury pays for one launch, read off its own balance after the simulated transaction.
@@ -149,9 +158,10 @@ async function simulateLaunch(rec, { dry = false } = {}) {
   let body;
   if (withCfg && dry) {          // no curve on chain yet: simulate making it and the first coin together
     const tre = k.treasury.publicKey;
-    const built = await client().partner.createConfigAndPool({ ...curve(), config: k.config.publicKey, feeClaimer: tre, leftoverReceiver: tre, quoteMint: new PublicKey(SOL_MINT), payer,
-      preCreatePoolParam: { name: rec.name, symbol: rec.symbol, uri: rec.uri, poolCreator: new PublicKey(rec.creator), baseMint: k.mint.publicKey } });
-    body = [...noCb(built.createConfigTx), ...noCb(built.createPoolTx)];
+    // one Transaction holding both instructions (config, then pool): ~1,190 bytes, inside the 1,232 limit
+    const built = await sdk(cl => cl.partner.createConfigAndPool({ ...curve(), config: k.config.publicKey, feeClaimer: tre, leftoverReceiver: tre, quoteMint: new PublicKey(SOL_MINT), payer,
+      preCreatePoolParam: { name: rec.name, symbol: rec.symbol, uri: rec.uri, poolCreator: new PublicKey(rec.creator), baseMint: k.mint.publicKey } }));
+    body = noCb(built);
   } else body = await poolIxs(rec, { payer, poolCreator: new PublicKey(rec.creator), mint: k.mint.publicKey });
   const ixs = [ComputeBudgetProgram.setComputeUnitLimit({ units: 600000 }), ...body];
   const { blockhash } = await rpc(c => c.getLatestBlockhash('confirmed'));
@@ -234,7 +244,7 @@ async function claimIxs(creator, payer, list) {
   const BN = require('bn.js'); const { PublicKey } = w3();
   const MAX = new BN('18446744073709551615'), out = [];
   for (const p of list.filter(x => x.fee > 0).sort((a, b) => b.fee - a.fee).slice(0, 3)) {
-    const tx = await client().creator.claimCreatorTradingFee({ creator: new PublicKey(creator), payer, pool: new PublicKey(p.pool), maxBaseAmount: MAX, maxQuoteAmount: MAX });
+    const tx = await sdk(cl => cl.creator.claimCreatorTradingFee({ creator: new PublicKey(creator), payer, pool: new PublicKey(p.pool), maxBaseAmount: MAX, maxQuoteAmount: MAX }));
     out.push(...noCb(tx));
   }
   return out;
