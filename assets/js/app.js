@@ -1,4 +1,4 @@
-// v01d · the page: the gate, the intro, the world, its districts, and the engine that runs inside every building.
+// v01d · the page: the intro (it starts by itself), the world, its districts, and the engine that runs inside every building.
 import { $, $$, esc, api, sleep, line, clear, toast, usd, price, ago, short, imgErr, copy, CA, initOut, follow, toTop } from './core.js';
 import { CMDS, ALIAS, setRunner, showTab, chartHover, chartRedraw } from './cmds.js';
 import { setExtraRunner, aliasOf, counted, stopTop } from './extra.js';
@@ -118,13 +118,13 @@ function soundScene(k) {      // 'room' | 'dark' | 'void'
 }
 function setSound(on) {
   SND.on = on; ls.set('v01d:snd', on ? '1' : '0');
-  $('#snd').setAttribute('aria-pressed', on); $('#g-snd').setAttribute('aria-pressed', on); $('#g-snd span').textContent = on ? 'sound on' : 'sound off';
-  if (on) { soundStart(); soundScene(V && V.mode === 'world' ? 'void' : 'room'); } else soundStop();
+  $('#snd').setAttribute('aria-pressed', on); $('#isnd').setAttribute('aria-pressed', on); $('#isnd span').textContent = on ? 'sound on' : 'sound off';
+  if (on) { soundStart(); soundScene(introScene()); } else soundStop();
 }
 window.addEventListener('v01d:sound', e => setSound(e.detail === 'on' ? true : e.detail === 'off' ? false : !SND.on));
 $('#snd').onclick = () => setSound(!SND.on);
-$('#g-snd').onclick = e => { e.stopPropagation(); SND.on = !SND.on; ls.set('v01d:snd', SND.on ? '1' : '0'); $('#g-snd').setAttribute('aria-pressed', SND.on); $('#g-snd span').textContent = SND.on ? 'sound on' : 'sound off'; };
-$('#g-snd').setAttribute('aria-pressed', SND.on); $('#g-snd span').textContent = SND.on ? 'sound on' : 'sound off';
+$('#isnd').onclick = () => setSound(!SND.on);
+$('#isnd').setAttribute('aria-pressed', SND.on); $('#isnd span').textContent = SND.on ? 'sound on' : 'sound off';
 
 // ---------------------------------------------------------------- the world
 let V = null;
@@ -141,10 +141,8 @@ DISTRICTS.forEach((d, i) => {
 });
 // labels keep inside the screen (a district at the edge still shows its name), and the far ones dim
 const LW = {}; let TOPB = 70; const measure = () => { for (const k in LBL) LW[k] = LBL[k].offsetWidth || 90; const t = $('.top'); TOPB = t ? t.getBoundingClientRect().bottom : 70; }; addEventListener('resize', measure);
-let mapTh = null;
 if (V) V.onLabels((list, th) => {
   const vw = innerWidth;
-  if (th != null && (mapTh == null || Math.abs(th - mapTh) > .004)) { mapTh = th; const deg = th * 180 / Math.PI; $('#mrot').setAttribute('transform', `rotate(${deg.toFixed(2)})`); $$('#mini .m-n').forEach(t => t.setAttribute('transform', `rotate(${(-deg).toFixed(2)})`)); }
   for (const l of list) {
     const el = LBL[l.id]; if (!el) continue; if (!LW[l.id]) measure();
     const hw = LW[l.id] / 2, x = Math.min(vw - hw - 8, Math.max(hw + 8, l.x)), y = Math.max(l.y, TOPB + 8 + el.offsetHeight);
@@ -168,13 +166,6 @@ async function liveTags() {
 $('#dnav').innerHTML = DISTRICTS.map((d, i) => `<button type="button" data-d="${d.id}"><small>${i + 1}</small>${d.name.toLowerCase()}</button>`).join('');
 $$('#dnav [data-d]').forEach(b => { b.onclick = () => go(b.dataset.d); b.onmouseenter = () => { if (V) V.point(b.dataset.d); hover(b.dataset.d); }; b.onmouseleave = () => { if (V) V.point(null); hover(null); }; });
 {
-  // the map turns with you: up is always the way you are looking
-  const n = DISTRICTS.length; let svg = '<g id="mrot"><circle r="13" class="m-hub"/><circle r="5" class="m-hole"/>';
-  DISTRICTS.forEach((d, i) => { const a = i / n * Math.PI * 2 + .35, x = Math.cos(a) * 62, y = Math.sin(a) * 62;
-    svg += `<line x1="${(Math.cos(a) * 13).toFixed(1)}" y1="${(Math.sin(a) * 13).toFixed(1)}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" class="m-br"/><g class="m-d" data-d="${d.id}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><rect x="-9" y="-9" width="18" height="18"/><text y="4" class="m-n">${i + 1}</text></g>`; });
-  svg += '</g><path class="m-you" d="M0 80 L-6 92 L6 92 Z"/>';
-  $('#mini').innerHTML = svg; $$('#mini [data-d]').forEach(g => { g.addEventListener('click', () => go(g.dataset.d)); g.addEventListener('mouseenter', () => { if (V) V.point(g.dataset.d); hover(g.dataset.d); }); g.addEventListener('mouseleave', () => { if (V) V.point(null); hover(null); }); });
-  $$('#mini [data-d]').forEach(g => { const t = document.createElementNS('http://www.w3.org/2000/svg', 'title'); t.textContent = DISTRICTS.find(d => d.id === g.dataset.d).name.toLowerCase(); g.appendChild(t); });
 }
 
 // ---------------------------------------------------------------- panels: a building opens
@@ -187,7 +178,6 @@ function open(id, { quiet = false } = {}) {
   $('#p-acts').innerHTML = D.ui();
   D.wire && D.wire($('#p-acts'), run);
   $$('#dnav [data-d]').forEach(b => b.classList.toggle('on', b.dataset.d === id));
-  $$('#mini [data-d]').forEach(g => g.classList.toggle('on', g.dataset.d === id));
   P.classList.remove('in'); void P.offsetWidth; P.classList.add('in');
   if (V) { V.focus(id); reframe(); setTimeout(reframe, 480); }
   soundOpen();
@@ -197,7 +187,7 @@ function open(id, { quiet = false } = {}) {
 }
 function close() {
   $('#panel').hidden = true; document.body.classList.remove('pan'); $('#lib').hidden = true;
-  $$('#dnav [data-d]').forEach(b => b.classList.remove('on')); $$('#mini [data-d]').forEach(g => g.classList.remove('on'));
+  $$('#dnav [data-d]').forEach(b => b.classList.remove('on'));
   if (V) { V.focus(null); V.frame(0, 0); } history.replaceState(null, '', '#/');
 }
 // keep the open district in the part of the screen the panel leaves free
@@ -249,54 +239,49 @@ async function feed() {
     const j = await api('pulse'); const list = (j.fresh || []).slice(0, 7);
     let fresh = 0; list.forEach(t => { if (!SEENM.has(t.mint)) { SEENM.add(t.mint); fresh++; } });
     if (!feedFirst && fresh) { if (V) V.beacon(); soundPing(); }
-    { const now = Date.now(), all = j.fresh || [], m = all.filter(t => now - Date.parse(t.created) < 60000).length; tag('radar', m ? `${m}${m >= all.length && all.length >= 20 ? '+' : ''} born in the last minute` : 'watching pump.fun'); }
+    { const now = Date.now(), all = j.fresh || [], m = all.filter(t => now - Date.parse(t.created) < 60000).length; tag('radar', m ? `${m}${m >= all.length && all.length >= 20 ? '+' : ''} born in the last minute` : 'watching meteora'); }
     feedFirst = false;
     $('#feed-l').innerHTML = list.map(t => `<li><button type="button" data-run="token ${esc(t.mint)}"><b>${esc(t.sym || short(t.mint))}</b><span>${esc((t.name || '').slice(0, 22))}</span><em>${usd(t.mcap)}</em><i>${ago(t.created)}</i></button></li>`).join('') || '<li class="d">quiet</li>';
     $('#feed-at').textContent = new Date(j.at || Date.now()).toLocaleTimeString('en-GB');
   } catch { $('#feed-at').textContent = 'offline'; }
 }
 async function net() {
-  try { const j = await api('ping'); $('#n-sol').textContent = j.sol ? '$' + j.sol.toFixed(2) : '—'; if (j.sol) tag('swap', 'SOL $' + j.sol.toFixed(2)); $('#n-slot').textContent = j.slot ? j.slot.toLocaleString('en-US') : '—'; $('#n-tps').textContent = j.tps ? Math.round(j.tps).toLocaleString('en-US') : '—'; }
-  catch { $('#n-sol').textContent = '—'; }
+  try { const j = await api('ping'); if (j.sol) tag('swap', 'SOL $' + j.sol.toFixed(2)); } catch {}
 }
 // presence: a random id for this tab only, counted for a minute, never stored with anything else
 const ME = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random())).replace(/-/g, '').slice(0, 20);
 async function here() {
-  try { const j = await api('here', { method: 'POST', body: { id: ME } }); $('#n-here').textContent = j.n != null ? String(j.n) : '—'; if (V) V.anons(j.n || 0); }
-  catch { $('#n-here').textContent = '—'; }
+  try { const j = await api('here', { method: 'POST', body: { id: ME } }); if (V) V.anons(j.n || 0); } catch {}
 }
 let liveT = 0;
 function live() { feed(); net(); here(); liveTags(); clearInterval(liveT); liveT = setInterval(() => { if (!document.hidden) { feed(); here(); } }, 12000); setInterval(() => { if (!document.hidden) { net(); liveTags(); } }, 30000); }
 
-// ---------------------------------------------------------------- the gate and the intro
-let introOn = false;
-const gateOpen = () => !$('#gate').hidden;
+// ---------------------------------------------------------------- the intro: it starts by itself
+let introOn = false, introT0 = 0;
+const gateOpen = () => false;
+const introScene = () => { if (!V || V.mode === 'world') return 'void'; const t = (performance.now() - introT0) / 1000; return t > 11.8 ? 'void' : t > 10.4 ? 'dark' : 'room'; };
 function showWorld() {
-  introOn = false; $('#skip').hidden = true; document.documentElement.classList.remove('gate-on', 'intro-on'); $('#hud').hidden = false;
+  introOn = false; $('#skip').hidden = true; $('#isnd').hidden = true; document.documentElement.classList.remove('intro-on'); $('#hud').hidden = false;
   requestAnimationFrame(() => { document.body.classList.add('world'); measure(); });
   soundScene('void'); live();
   const h = location.hash.replace(/^#\//, ''); if (h && DIST[h]) setTimeout(() => go(h), 600);
   setTimeout(() => $('#hint').classList.add('gone'), 9000);
 }
 function skipIntro() { if (!introOn) return; if (V) V.skip(); else showWorld(); }
-function enter() {
-  if (!gateOpen()) return;
-  $('#gate').classList.add('go'); setTimeout(() => { $('#gate').hidden = true; }, 700);
-  if (SND.on) { soundStart(); soundScene('room'); }
+function startIntro() {
   ss.set('v01d:intro', '1');
   if (!V) { showWorld(); return; }
-  introOn = true; document.documentElement.classList.add('intro-on'); setTimeout(() => { if (introOn) $('#skip').hidden = false; }, 1500);
+  introOn = true; introT0 = performance.now(); document.documentElement.classList.add('intro-on');
+  $('#isnd').hidden = false; setTimeout(() => { if (introOn) $('#skip').hidden = false; }, 1200);
+  if (SND.on) { soundStart(); soundScene('room'); }
   // the hum dies with the lights
-  if (SND.on) { setTimeout(() => introOn && soundScene('dark'), 10400); setTimeout(() => introOn && soundScene('void'), 11800); }
+  setTimeout(() => introOn && soundScene('dark'), 10400); setTimeout(() => introOn && soundScene('void'), 11800);
   V.intro(showWorld);
 }
-$('#enter').onclick = enter;
-$('#gate').addEventListener('click', e => { if (e.target === $('#gate')) enter(); });
 $('#skip').onclick = skipIntro;
-window.addEventListener('v01d:intro', () => { close(); $('#hud').hidden = true; document.body.classList.remove('world'); introOn = true; $('#skip').hidden = false; if (SND.on) soundScene('room'); V && V.intro(showWorld); });
+window.addEventListener('v01d:intro', () => { close(); $('#hud').hidden = true; document.body.classList.remove('world'); startIntro(); });
 
-// returning in the same session, or reduced motion: no gate, straight into the world
-// a link straight to a district (or /docs) skips the gate too
+// the first visit in a tab plays the intro; a reload, a link straight to a district, or reduced motion goes straight in
 const DEEP = !!DIST[location.hash.replace(/^#\//, '')] && !Q.has('intro');
-if (REDUCED || (ss.get('v01d:intro') && !Q.has('intro')) || !V || DEEP) { $('#gate').hidden = true; document.documentElement.classList.remove('gate-on'); if (V) V.world(); showWorld(); }
-else { document.addEventListener('keydown', function k(e) { if (gateOpen() && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); enter(); } }, { once: false }); }
+if (REDUCED || (ss.get('v01d:intro') && !Q.has('intro')) || !V || DEEP) { if (V) V.world(); showWorld(); }
+else startIntro();

@@ -20,10 +20,10 @@ const priv = t => `<p class="priv"><i></i>${t}</p>`;
 export const DIST = {
   launch: {
     tag: 'the mint',
-    line: 'a coin on pump.fun with no wallet, no signature and no SOL. the engine pays the launch, your picture is wiped of its metadata, and the creator key is born in this tab.',
+    line: 'a coin on meteora\'s bonding curve with no wallet, no signature and no SOL. the engine pays the launch, your picture is wiped of its metadata, and the creator key is born in this tab. at ~420 SOL market cap it graduates into a meteora pool with its liquidity locked forever.',
     ui: () => `<div class="row2">${btn('launch', 'launch privately', 'pri')}${btn('launch --wallet', 'launch from a wallet or burner')}</div>
       <div class="row2">${btn('coins', 'coins born here')}${btn('claim', 'claim creator fees')}${btn('cat launch.txt', 'how it works')}</div>
-      ${priv('no wallet touches a private launch. the launcher is new every time and ends at 0 SOL.')}`,
+      ${priv('no wallet of yours touches a private launch. the engine pays and signs it; your key only ever claims.')}`,
     wire: wireButtons, first: run => run('launch'),
   },
   swap: {
@@ -53,7 +53,7 @@ export const DIST = {
   },
   radar: {
     tag: 'the watchtower',
-    line: 'every pump.fun coin the moment it is born, the final stretch before graduation, what is trending, and a full report on anything: holders, authorities, liquidity, a risk read.',
+    line: 'every coin born on meteora the moment it appears, the final stretch before graduation, what is trending, and a full report on anything: holders, authorities, liquidity, a risk read.',
     ui: () => `<form class="fx" id="f-rd">${field('rd-q', 'ticker, name or mint')}<button class="pa pri" data-k="token">report</button><button class="pa" data-k="chart">chart</button><button class="pa" data-k="holders">holders</button><button class="pa" data-k="tape">tape</button></form>
       <div class="row2"><button type="button" class="pa pri" data-tab="pulse">live scanner</button>${btn('trending 5m', 'trending 5m')}${btn('trending 1h', '1h')}${btn('trending 24h', '24h')}${btn('new', 'just born')}${btn('watchlist', 'watchlist')}</div>`,
     wire: (root, run) => {
@@ -120,10 +120,10 @@ export function manual() {
     <p>a world on solana where every building is a working app and nobody has a name. you walk in, you launch, you trade, and nothing you do here points back at you.</p>
     <p>up there is the surface: an endless white room where every tile is watched, the way every wallet on a public chain is. down here is the void. you got here through the hole.</p></section>
   <section><h2><em>02</em>the districts</h2><ul class="dl">
-    ${d('launch', 'launch', 'a pump.fun coin with no wallet, no signature and no SOL, or from a wallet with a first buy. claim its creator fees later.')}
+    ${d('launch', 'launch', 'a coin on meteora with no wallet, no signature and no SOL, or from a wallet with a first buy. claim its creator fees later.')}
     ${d('swap', 'swap', 'any token to any token across every solana dex. buy, sell, quote, track what you hold.')}
     ${d('stocks', 'stocks', 'tokenized stocks with SOL, any hour of the day.')}
-    ${d('radar', 'radar', 'every pump.fun birth in real time, trending boards, full token reports, charts and tapes.')}
+    ${d('radar', 'radar', 'every meteora birth in real time, trending boards, full token reports, charts and tapes.')}
     ${d('orders', 'orders', 'limit orders and dca plans that live on jupiter and fill while you sleep.')}
     ${d('locker', 'locker', 'burner wallets born in your tab, wallet connect, sends.')}
     ${d('scan', 'scan', 'what this page and the chain can see about you, and a button to forget it all.')}
@@ -134,10 +134,21 @@ export function manual() {
     <li><b>00:01</b>your picture is redrawn in your browser. the camera, the place and the time inside the file never leave your device.</li>
     <li><b>00:02</b>a creator key is born in your browser. you save it; v01d never sees it.</li>
     <li><b>00:04</b>a few seconds of proof of work on your device instead of a login, so nobody can drain the engine.</li>
-    <li><b>00:05</b>the engine funds a brand new launcher inside the launch itself, to the lamport.</li>
-    <li><b>00:06</b>the coin is live on pump.fun. no dev buy. the launcher ends at 0 SOL and is never used again.</li>
+    <li><b>00:05</b>the engine pays for the launch out of its treasury, in one transaction. your wallet is never in it.</li>
+    <li><b>00:06</b>the coin is live on meteora's dynamic bonding curve. no dev buy, so everyone starts at the same price.</li>
+    <li><b>~420 SOL</b>it graduates into a meteora pool. the liquidity is locked forever: 80% of it is the creator's, 20% v01d's.</li>
     <li><b>later</b>load your key in the launch district and claim the fees. the network fee is paid for you.</li></ol></section>
-  <section><h2><em>04</em>what stays hidden, what stays public</h2>
+  <section><h2><em>04</em>the curve, on meteora</h2>
+    <p>every coin born here lives on meteora's dynamic bonding curve, the same engine under bags and jupiter studio. one curve for every coin, written on chain once and shared:</p>
+    <table class="pt"><tbody>
+    ${row('supply', '1,000,000,000 tokens, 6 decimals. nobody can mint more and the metadata is frozen.')}
+    ${row('starts at', 'about 30 SOL of market cap. no dev buy on a private launch, so everyone starts at the same price.')}
+    ${row('graduates at', 'about 420 SOL of market cap. the curve moves its SOL and tokens into a meteora DAMM v2 pool.')}
+    ${row('after graduation', 'the pool\'s liquidity is locked forever. 80% of the locked position belongs to the creator, 20% to v01d; both earn its fees.')}
+    ${row('trading fee', '1% on the curve. meteora keeps its protocol cut; of the rest, 80% is the creator\'s and 20% refills the treasury that pays for free launches.')}
+    ${row('creator fees', 'they wait in the coin\'s pool until the creator key claims them. type claim, load the key file, done; the network fee is paid for you.')}
+    </tbody></table></section>
+  <section><h2><em>05</em>what stays hidden, what stays public</h2>
     <table class="pt"><thead><tr><th>hidden</th><th>still public</th></tr></thead><tbody>
     ${row('your name: never asked', 'nothing')}
     ${row('your wallet: never used for a private launch', 'the launcher and the coin')}
@@ -148,20 +159,21 @@ export function manual() {
     ${row('your balances: only once you move them into a solana privacy ring (helius runs those, not v01d)', 'who sent to whom, and what leaves a ring')}
     </tbody></table>
     <p class="note">a public chain is public. v01d can't hide what solana shows; it can stop it pointing at you.</p></section>
-  <section><h2><em>05</em>honest limits</h2><ul class="lim">
+  <section><h2><em>06</em>honest limits</h2><ul class="lim">
     <li>a burner funded straight from your main wallet is linked to it, forever. fund it some other way.</li>
     <li>tokenized stocks track a share price. they are not shares in your name, and their issuers can pause or freeze them.</li>
-    <li>free launches run while the engine's treasury has SOL. when it runs low, launches pause until it is topped up; the launch district says so.</li>
+    <li>free launches run while the engine's treasury has SOL. 20% of every coin's curve fees flows back into it; when it runs low anyway, launches pause until it is topped up, and the launch district says so.</li>
+    <li>a coin graduates only if people buy it up the curve. most never do.</li>
     <li>a limit order needs about $5, a dca plan about $100. those are jupiter's minimums, not ours.</li>
     <li>most memecoins go to zero. nothing in v01d is advice.</li></ul></section>
-  <section><h2><em>06</em>every command</h2>
+  <section><h2><em>07</em>every command</h2>
     <p>every building is a front for the same engine. all of it also works by hand: open the terminal (press /) and type. click one here to run it.</p>
     <p class="note">keys: <b>1–9</b> walk into a district · <b>/</b> the prompt · <b>ctrl k</b> go anywhere · <b>tab</b> completes · <b>↑ ↓</b> your history · <b>esc</b> steps back out.</p>
     ${[['launch', 'launch'], ['trade', 'trade'], ['wallet', 'wallets and burners'], ['market', 'markets'], ['privacy', 'privacy'], ['system', 'the system']].map(([k, t]) => {
       const cs = Object.values(CMDS).filter(c => c.cat === k && c.help && c.name !== 'gm'); if (!cs.length) return '';
       return `<h3 class="ch3">${t}</h3><ul class="cref">${cs.map(c => `<li>${/[<\[]/.test(c.usage) ? `<code>${esc(c.usage)}</code>` : `<code class="tok" data-run="${esc(c.name)}">${esc(c.usage)}</code>`}<span>${esc(c.help)}</span></li>`).join('')}</ul>`;
     }).join('')}</section>
-  <section><h2><em>07</em>questions</h2><div class="faq2">
+  <section><h2><em>08</em>questions</h2><div class="faq2">
     <details><summary>do i need a wallet?</summary><p>not to look around, and not for a private launch. you need one (or a burner with SOL in it) to trade.</p></details>
     <details><summary>does v01d hold my money?</summary><p>no. every transaction is signed by your wallet or by a burner in your tab. v01d builds transactions and relays them; it never holds a key.</p></details>
     <details><summary>what does v01d know about me?</summary><p>what any website sees: your ip, for as long as a request takes. no cookies, no analytics, no accounts. the scan district checks this page live.</p></details>

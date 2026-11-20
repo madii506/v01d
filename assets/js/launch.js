@@ -23,7 +23,7 @@ function pow(challenge, bits, onP) { return new Promise((res, rej) => { const w 
 
 export function launchForm(wallet) {
   const S = { image: null, key: null, mode: wallet ? 'wallet' : 'key' };
-  const b = block(wallet ? 'launch --wallet · pump.fun · your wallet signs and can buy first' : 'launch · pump.fun · private, free, no wallet', `
+  const b = block(wallet ? 'launch --wallet · meteora · your wallet signs and can buy first' : 'launch · meteora · private, free, no wallet', `
     <div class="f2">
       <label class="fl">name<input name="name" maxlength="32" placeholder="My Coin"></label>
       <label class="fl">ticker<input name="symbol" maxlength="10" placeholder="COIN"></label>
@@ -35,7 +35,7 @@ export function launchForm(wallet) {
     <div class="imgrow" style="margin-top:12px"><div class="pv" data-pv>image</div><div class="row"><button type="button" class="btn ghost sm" data-pick>choose image</button><input type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden data-file><span class="d" data-info>redrawn here. its hidden data never leaves your device.</span></div></div>
     <div class="seg" data-seg>${wallet ? '<button type="button" class="on" data-m="wallet">your wallet</button>' : '<button type="button" class="on" data-m="key">a key born here</button><button type="button" data-m="own">an address I own</button>'}</div>
     <div data-modebox></div>
-    <div class="row" style="margin-top:12px"><button type="button" class="btn" data-go>${wallet ? 'sign &amp; launch' : 'launch'}</button><span class="d">${wallet ? 'your wallet pays pump.fun and any dev buy' : 'free. nothing to connect, sign or pay.'}</span></div>
+    <div class="row" style="margin-top:12px"><button type="button" class="btn" data-go>${wallet ? 'sign &amp; launch' : 'launch'}</button><span class="d">${wallet ? 'your wallet pays meteora and any dev buy' : 'free. nothing to connect, sign or pay.'}</span></div>
     <div class="err" data-err></div>`);
   const q = s => b.querySelector(s), fld = n => q(`[name=${n}]`).value.trim(), err = t => { q('[data-err]').textContent = t || ''; };
   q('[data-pick]').onclick = () => q('[data-file]').click();
@@ -80,13 +80,13 @@ async function privateLaunch(f, S, creator) {
   H.innerHTML = `<span class="o">✓</span> ${dots('proof of work', `<span class="c">found in ${((performance.now() - t0) / 1000).toFixed(1)}s</span>`)}`;
   line(`<span class="o">✓</span> ${dots('clean image', `<span class="c">${Math.round(S.image.bytes / 1024)} KB, no metadata</span>`)}`);
   line(`<span class="o">✓</span> ${dots('creator', `<span class="c">${short(creator)}</span> <span class="f">(${S.mode === 'own' ? 'your own address' : 'born in this browser'})</span>`)}`);
-  const T = spinner('a fresh launcher is funded inside the launch · pump.fun create');
+  const T = spinner('the engine pays the launch · meteora bonding curve');
   const j = await api('launch', { method: 'POST', body: { ...f, image: S.image.dataUrl, creator, pow: { challenge: ch.challenge, nonce: res.nonce } } });
   T.done(`<span class="o">✓</span> ${dots('launch', '<span class="c">sent</span>')}`);
   line(dots('mint', `<span class="h">${j.mint}</span>`));
   await confirm(j.status, j.id);
   line(''); line(`<span class="h">■ ${esc(f.name)} ($${esc(f.symbol)}) is live.</span> <span class="m">its creator is a key nobody else has seen.</span>`);
-  line(`  <a href="https://pump.fun/coin/${j.mint}" target="_blank" rel="noopener noreferrer">pump.fun ↗</a>   <a href="https://solscan.io/tx/${j.sig}" target="_blank" rel="noopener noreferrer">transaction ↗</a>   <span class="d">claim fees later with</span> <span class="c">claim</span>`);
+  line(`  <a href="https://jup.ag/tokens/${j.mint}" target="_blank" rel="noopener noreferrer">jupiter ↗</a>   <a href="https://solscan.io/tx/${j.sig}" target="_blank" rel="noopener noreferrer">transaction ↗</a>   <span class="d">claim fees later with</span> <span class="c">claim</span>`);
 }
 async function walletLaunch(f, S, buy) {
   buy = Math.max(0, Math.min(10, buy));
@@ -105,7 +105,7 @@ async function walletLaunch(f, S, buy) {
   line(dots('mint', `<span class="h">${r.mint}</span>`));
   await confirm(r.status, r.id);
   line(''); line(`<span class="h">■ ${esc(f.name)} ($${esc(f.symbol)}) is live.</span> <span class="m">launched from your wallet${buy ? `, ${buy} SOL bought first` : ''}.</span>`);
-  line(`  <a href="https://pump.fun/coin/${r.mint}" target="_blank" rel="noopener noreferrer">pump.fun ↗</a>   <a href="https://solscan.io/tx/${r.sig}" target="_blank" rel="noopener noreferrer">transaction ↗</a>`);
+  line(`  <a href="https://jup.ag/tokens/${r.mint}" target="_blank" rel="noopener noreferrer">jupiter ↗</a>   <a href="https://solscan.io/tx/${r.sig}" target="_blank" rel="noopener noreferrer">transaction ↗</a>`);
 }
 async function confirm(st, id) {
   const C = spinner('waiting for confirmation'); let n = 0;
@@ -148,6 +148,6 @@ export async function coinsTable(run) {
   const j = await api('coins', { params: { limit: 50 } }); const l = (j.coins || []).filter(c => c.status !== 'failed');
   if (!l.length) return L.done('<span class="m">no coins launched here yet. type</span> <span class="c">launch</span> <span class="m">to be first.</span>');
   L.done(`<span class="o">✓</span> ${l.length} coin${l.length > 1 ? 's' : ''} launched on v01d`);
-  const b = block(`coins · launched on v01d · ${l.length}`, `<div style="overflow:auto"><table class="tbl"><thead><tr><th></th><th>coin</th><th class="n">mcap</th><th class="n">curve</th><th>creator</th><th class="n">age</th><th></th></tr></thead><tbody>${l.map(c => `<tr><td><img src="${esc(c.img)}" alt=""></td><td><span class="tok" data-run="token ${esc(c.mint)}"><b>$${esc(c.symbol)}</b></span> <span class="d">${esc(c.name)}</span></td><td class="n">${usd(c.mcapUsd)}</td><td class="n">${c.graduated ? 'graduated' : c.progress != null ? Math.round(c.progress * 100) + '%' : c.status === 'sending' ? 'confirming' : '—'}</td><td class="d">${short(c.creator)}</td><td class="n d">${ago(c.at)}</td><td><a href="https://pump.fun/coin/${esc(c.mint)}" target="_blank" rel="noopener noreferrer">pump.fun ↗</a></td></tr>`).join('')}</tbody></table></div>`);
+  const b = block(`coins · launched on v01d · ${l.length}`, `<div style="overflow:auto"><table class="tbl"><thead><tr><th></th><th>coin</th><th class="n">mcap</th><th class="n">curve</th><th>creator</th><th class="n">age</th><th></th></tr></thead><tbody>${l.map(c => `<tr><td><img src="${esc(c.img)}" alt=""></td><td><span class="tok" data-run="token ${esc(c.mint)}"><b>$${esc(c.symbol)}</b></span> <span class="d">${esc(c.name)}</span></td><td class="n">${usd(c.mcapUsd)}</td><td class="n">${c.graduated ? 'graduated' : c.progress != null ? Math.round(c.progress * 100) + '%' : c.status === 'sending' ? 'confirming' : '—'}</td><td class="d">${short(c.creator)}</td><td class="n d">${ago(c.at)}</td><td><a href="https://jup.ag/tokens/${esc(c.mint)}" target="_blank" rel="noopener noreferrer">jupiter ↗</a></td></tr>`).join('')}</tbody></table></div>`);
   return b;
 }
