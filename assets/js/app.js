@@ -244,10 +244,11 @@ function skipIntro() { if (!introOn) return; if (V) V.skip(); else showWorld(); 
 function startIntro() {
   ss.set('v01d:intro', '1');
   if (!V) { showWorld(); return; }
-  introOn = true; introT0 = performance.now(); document.documentElement.classList.add('intro-on');
+  introOn = true; document.documentElement.classList.add('intro-on');
   $('#isnd').hidden = false; setTimeout(() => { if (introOn) $('#skip').hidden = false; }, 1200);
-  score.intro(introT0); if (SND.on) soundStart();          // the score follows the intro's clock, even if sound only starts after a tap
-  V.intro(showWorld);
+  score.intro(performance.now());                            // the intro first, so waking the sound doesn't start the world's music
+  if (SND.on) soundStart();                                  // the sound is built (a moment), then picture and sound start on the same clock
+  introT0 = performance.now(); score.intro(introT0); V.intro(showWorld);   // the score follows the intro's clock, even if sound only starts after a tap
 }
 $('#skip').onclick = skipIntro;
 window.addEventListener('v01d:intro', () => { close(); $('#hud').hidden = true; document.body.classList.remove('world'); startIntro(); });
