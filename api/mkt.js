@@ -85,8 +85,14 @@ async function trending(w) {
   w = ['5m', '1h', '6h', '24h'].includes(w) ? w : '1h';
   return L.cached('tr:' + w, 30000, async () => (await jup(`/tokens/v2/toptrending/${w}?limit=30`) || []).map(shape));
 }
-async function recentPump() {
-  return L.cached('recent', 4000, async () => (await jup('/tokens/v2/recent') || []).filter(x => x.launchpad === 'pump.fun').map(shape).slice(0, 30));
+// every launchpad that runs on Meteora's dynamic bonding curve, as jupiter names them
+const METEORA = ['met-dbc', 'bags.fun', 'jup-studio'];
+const onMeteora = x => METEORA.includes(x && x.launchpad);
+async function recentPump() {          // the newest coins born on meteora (the name stays for the callers)
+  return L.cached('recent', 4000, async () => {
+    try { const g = await gems(); if (g.fresh.length) return g.fresh.slice(0, 30); } catch {}
+    return (await jup('/tokens/v2/recent') || []).filter(onMeteora).map(shape).slice(0, 30);
+  });
 }
 async function stocks() {
   return L.cached('stocks', 60000, async () => {
@@ -217,7 +223,7 @@ const PROGRAMS = {
   'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4': 'jupiter', '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P': 'pump.fun', 'pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA': 'pumpswap',
   '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8': 'raydium amm', 'CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK': 'raydium clmm', 'CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C': 'raydium cpmm',
   'LanMV9sAd7wArD4vJFi2qDdfnVhFxYSUg6eADduJ3uj': 'raydium launchlab', 'whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc': 'orca', 'LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo': 'meteora dlmm',
-  'Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB': 'meteora pools', 'cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG': 'meteora damm v2', 'pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ': 'pump fees',
+  'Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB': 'meteora pools', 'cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG': 'meteora damm v2', 'dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN': 'meteora dbc', 'pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ': 'pump fees',
   'j1o2qRpjcyUwEvwtcfhEQefh773ZgjxcVRry7LDqg5X': 'jupiter limit', 'DCA265Vj8a9CEuX1eb1LWRnDT7uK6q1xMipnNyatn23M': 'jupiter dca',
 };
 async function inspectTx(sig) {
@@ -276,10 +282,11 @@ async function trades(mint) {
     }));
   });
 }
-// the scanner's first source: jupiter's own gems feed (new / about to graduate / graduated, each with its bonding curve,
+// the scanner's first source (coins born on meteora): jupiter's own gems feed (new / about to graduate / graduated, each with its bonding curve,
 // audit and bundler numbers). the token lists below are the fallback, with the curve read from the chain.
-async function gems() {
-  const f = { launchpads: ['pump.fun'] };
+function gems() { return L.cached('gems', 3000, gemsRaw); }
+async function gemsRaw() {
+  const f = { launchpads: METEORA };
   const r = await fetch('https://datapi.jup.ag/v1/pools/gems', { method: 'POST', headers: { accept: 'application/json', 'content-type': 'application/json' }, body: JSON.stringify({ recent: f, aboutToGraduate: f, graduated: f }), signal: AbortSignal.timeout(6000) });
   if (!r.ok) throw new Error('gems ' + r.status);
   const j = await r.json();
@@ -320,7 +327,7 @@ async function pulse() {
     try { return { at: Date.now(), src: 'jupiter', ...(await gems()) }; } catch {}
     const src = await Promise.allSettled([jup('/tokens/v2/recent'), jup('/tokens/v2/toptrending/5m?limit=100'), jup('/tokens/v2/toptrending/1h?limit=100'), jup('/tokens/v2/toporganicscore/5m?limit=100')]);
     const all = new Map();
-    for (const r of src) if (r.status === 'fulfilled') for (const x of r.value || []) if (x.launchpad === 'pump.fun' && !all.has(x.id)) all.set(x.id, shape(x));
+    for (const r of src) if (r.status === 'fulfilled') for (const x of r.value || []) if (onMeteora(x) && !all.has(x.id)) all.set(x.id, shape(x));
     const list = [...all.values()], live = list.filter(t => !t.grad).slice(0, 120);
     let cur = {}; try { cur = await C.coinStats(live.map(t => t.mint)); } catch {}
     for (const t of list) { const c = cur[t.mint]; t.progress = t.grad ? 1 : c ? c.progress : null; if (c && c.complete) t.grad = true; }

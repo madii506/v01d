@@ -1,4 +1,4 @@
-// HALO API. One function, many ops: status, pow, launch, launches, coins, meta, img, claim, claimbuild,
+// v01d API (the launch engine, on Meteora's dynamic bonding curve). One function, many ops: status, pow, launch, launches, coins, meta, img, claim, claimbuild,
 // claimsend, withdrawbuild, withdrawsend, walletbuild, walletsend, wclaimbuild, wclaimsend, dryrun, tick, here.
 const crypto = require('crypto');
 const L = require('./_lib');
@@ -74,7 +74,7 @@ async function status() {
     launchesLeft: bal === null ? null : Math.max(0, Math.floor((bal - 5_000_000) / avg)),
     today: t.today, cap: CFG.cap, perIp: CFG.perIp, launched: t.launched,
     last: last[0] ? { name: last[0].name, symbol: last[0].symbol, mint: last[0].mint, at: last[0].created_at } : null,
-    powBits: CFG.bits, ca: CFG.ca, x: CFG.x, mock: C.MOCK || undefined,
+    powBits: CFG.bits, ca: CFG.ca, x: CFG.x, venue: 'meteora', mock: C.MOCK || undefined,
   };
 }
 
@@ -244,6 +244,14 @@ async function here(req) {
   return { ok: true, n: r[0] ? Number(r[0].n) : 0 };
 }
 
+// ---------- the creator's coins born here (on Meteora each coin's pool holds its own creator fees) ----------
+async function creatorMints(creator) {
+  if (!L.dbReady()) return [];
+  await L.schema();
+  const r = await L.q(`SELECT mint FROM halo_launches WHERE creator = $1 AND status IN ('launched', 'sending') ORDER BY created_at DESC LIMIT 60`, [creator]);
+  return r.map(x => x.mint);
+}
+
 // ---------- router ----------
 module.exports = async (req, res) => {
   const qs = L.query(req), op = String(qs.op || '');
@@ -269,9 +277,9 @@ module.exports = async (req, res) => {
       const b = await L.body(req); const creator = String(b.creator || '');
       if (!C.isAddr(creator)) throw L.err(400, 'That is not a Solana address.');
       if (L.limited('wcb:' + L.ip(req), 10, 600000)) throw L.err(429, 'Too many claims. Wait a few minutes.');
-      const c = await C.claimable(creator);
+      const mints = await creatorMints(creator), c = await C.claimable(creator, mints);
       if (c.vault < CFG.minClaim) throw L.err(400, `There is under ${sol(CFG.minClaim)} SOL to claim, which is not worth the fee yet.`);
-      return L.send(res, 200, { ok: true, ...(await C.buildWalletClaim(creator)), vaultSol: sol(c.vault) });
+      return L.send(res, 200, { ok: true, ...(await C.buildWalletClaim(creator, mints)), vaultSol: sol(c.vault) });
     }
     if (op === 'wclaimsend' && req.method === 'POST') {
       const b = await L.body(req); const creator = String(b.creator || '');
@@ -301,7 +309,7 @@ module.exports = async (req, res) => {
     if (op === 'claim') {
       const creator = String(qs.creator || ''); if (!C.isAddr(creator)) throw L.err(400, 'That is not a Solana address.');
       if (L.limited('claim:' + L.ip(req), 40, 600000)) throw L.err(429, 'Slow down a little.');
-      const c = await C.claimable(creator);
+      const c = await C.claimable(creator, await creatorMints(creator));
       const first = c.wallet === 0;
       return L.send(res, 200, { ok: true, creator, vaultSol: sol(c.vault), walletSol: sol(c.wallet), canClaim: c.vault >= CFG.minClaim && (!first || c.vault >= RENT_MIN), minClaimSol: sol(CFG.minClaim) });
     }
@@ -309,9 +317,9 @@ module.exports = async (req, res) => {
       const b = await L.body(req); const creator = String(b.creator || '');
       if (!C.isAddr(creator)) throw L.err(400, 'That is not a Solana address.');
       if (L.limited('cb:' + L.ip(req), 8, 600000) || L.limited('cbc:' + creator, 4, 600000)) throw L.err(429, 'Too many claims. Wait a few minutes.');
-      const c = await C.claimable(creator);
+      const mints = await creatorMints(creator), c = await C.claimable(creator, mints);
       if (c.vault < CFG.minClaim) throw L.err(400, `There is under ${sol(CFG.minClaim)} SOL to claim, which is not worth the fee yet.`);
-      return L.send(res, 200, { ok: true, ...(await C.buildClaim(creator)), vaultSol: sol(c.vault) });
+      return L.send(res, 200, { ok: true, ...(await C.buildClaim(creator, mints)), vaultSol: sol(c.vault) });
     }
     if (op === 'claimsend' && req.method === 'POST') {
       const b = await L.body(req);
@@ -337,7 +345,7 @@ module.exports = async (req, res) => {
       const id = 'dry' + newId(), k = await C.keys(id), o = origin(req);
       const kp = (await C.keys('dry-creator:' + id)).mint.publicKey.toBase58();
       const sim = await C.simulateLaunch({ id, name: 'v01d dry run', symbol: 'DRY', uri: `${o}/m/${id}`, creator: kp }, { dry: true });
-      return L.send(res, 200, { ok: true, dryRun: true, payer: sim.payer, launcher: k.launcher.publicKey.toBase58(), mint: k.mint.publicKey.toBase58(), creator: kp, result: sim, costSol: sim.ok ? sol(sim.need) : null });
+      return L.send(res, 200, { ok: true, dryRun: true, venue: 'meteora dbc', config: await C.configAddress(), configLive: await C.configExists(), payer: sim.payer, mint: k.mint.publicKey.toBase58(), creator: kp, result: sim, costSol: sim.ok ? sol(sim.need) : null });
     }
     if (op === 'tick') {
       await L.schema();
