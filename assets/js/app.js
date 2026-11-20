@@ -3,7 +3,7 @@ import { $, $$, esc, api, sleep, line, clear, toast, usd, price, ago, short, img
 import { CMDS, ALIAS, setRunner, showTab, chartHover, chartRedraw } from './cmds.js';
 import { setExtraRunner, aliasOf, counted, stopTop } from './extra.js';
 import * as SG from './signer.js';
-import { createV01d, DISTRICTS } from '../v01d-3d.js';
+import { createV01d, DISTRICTS } from '../v01d-3d.js?v=4';
 import { DIST, manual } from './districts.js';
 import { initPrompt } from './prompt.js';
 
@@ -241,9 +241,7 @@ async function feed() {
     if (!feedFirst && fresh) { if (V) V.beacon(); soundPing(); }
     { const now = Date.now(), all = j.fresh || [], m = all.filter(t => now - Date.parse(t.created) < 60000).length; tag('radar', m ? `${m}${m >= all.length && all.length >= 20 ? '+' : ''} born in the last minute` : 'watching raydium'); }
     feedFirst = false;
-    $('#feed-l').innerHTML = list.map(t => `<li><button type="button" data-run="token ${esc(t.mint)}"><b>${esc(t.sym || short(t.mint))}</b><span>${esc((t.name || '').slice(0, 22))}</span><em>${usd(t.mcap)}</em><i>${ago(t.created)}</i></button></li>`).join('') || '<li class="d">quiet</li>';
-    $('#feed-at').textContent = new Date(j.at || Date.now()).toLocaleTimeString('en-GB');
-  } catch { $('#feed-at').textContent = 'offline'; }
+  } catch {}
 }
 async function net() {
   try { const j = await api('ping'); if (j.sol) tag('swap', 'SOL $' + j.sol.toFixed(2)); } catch {}
@@ -259,7 +257,7 @@ function live() { feed(); net(); here(); liveTags(); clearInterval(liveT); liveT
 // ---------------------------------------------------------------- the intro: it starts by itself
 let introOn = false, introT0 = 0;
 const gateOpen = () => false;
-const introScene = () => { if (!V || V.mode === 'world') return 'void'; const t = (performance.now() - introT0) / 1000; return t > 11.8 ? 'void' : t > 10.4 ? 'dark' : 'room'; };
+const introScene = () => { if (!V || V.mode === 'world') return 'void'; const t = (performance.now() - introT0) / 1000; return t > 13.7 ? 'void' : t > 8.6 ? 'dark' : 'room'; };
 function showWorld() {
   introOn = false; $('#skip').hidden = true; $('#isnd').hidden = true; document.documentElement.classList.remove('intro-on'); $('#hud').hidden = false;
   requestAnimationFrame(() => { document.body.classList.add('world'); measure(); });
@@ -274,8 +272,8 @@ function startIntro() {
   introOn = true; introT0 = performance.now(); document.documentElement.classList.add('intro-on');
   $('#isnd').hidden = false; setTimeout(() => { if (introOn) $('#skip').hidden = false; }, 1200);
   if (SND.on) { soundStart(); soundScene('room'); }
-  // the hum dies with the lights
-  setTimeout(() => introOn && soundScene('dark'), 10400); setTimeout(() => introOn && soundScene('void'), 11800);
+  // the hum thins as the lights die around the desk; the void opens as the screen throws you in
+  setTimeout(() => introOn && soundScene('dark'), 8600); setTimeout(() => introOn && soundScene('void'), 13700);
   V.intro(showWorld);
 }
 $('#skip').onclick = skipIntro;
