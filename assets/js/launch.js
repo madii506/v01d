@@ -19,6 +19,32 @@ async function cleanImage(file) {
   const dataUrl = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(blob); });
   return { dataUrl, bytes: blob.size, w: c.width, h: c.height, origBytes: file.size };
 }
+// the curve every coin climbs on raydium launchlab, drawn from the engine's own terms (constant product: price rises with
+// every SOL raised; at the raise target the SOL and the remaining tokens move into a raydium pool)
+export function curveCard() {
+  const t = (STATUS && STATUS.terms) || { raiseSol: 85, supply: 1e9, sold: 793.1e6, feePct: { creator: .5, v01d: .25, raydium: .25 }, lp: { burnedPct: 50, lockedPct: 50 } };
+  const A = t.sold / 1e6, T = (t.supply - t.sold) / 1e6, B = t.raiseSol, x0 = A * A / (A - T), y0 = B * (x0 - A) / A, k = x0 * y0;
+  const mcap = r => (y0 + r) ** 2 / k * (t.supply / 1e6), m0 = mcap(0), m1 = mcap(B);
+  const W = 600, H = 220, P = { l: 52, r: 16, t: 14, b: 30 }, top = Math.ceil(m1 / 100) * 100 + 40;
+  const X = r => P.l + r / B * (W - P.l - P.r), Y = m => H - P.b - m / top * (H - P.t - P.b);
+  let d = ''; for (let i = 0; i <= 64; i++) { const r = B * i / 64; d += (i ? 'L' : 'M') + X(r).toFixed(1) + ' ' + Y(mcap(r)).toFixed(1); }
+  const grid = [100, 200, 300, 400].filter(v => v < top).map(v => `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${P.l - 8}" y="${Y(v) + 4}" text-anchor="end">${v}</text>`).join('');
+  const xt = [0, 20, 40, 60, B].map(v => `<text x="${X(v)}" y="${H - 10}" text-anchor="middle">${v}</text>`).join('');
+  const f = t.feePct, sol = v => '≈' + (v < 100 ? Math.round(v) : Math.round(v / 50) * 50) + ' SOL';
+  const b = block('curve · raydium launchlab · how every coin climbs', `
+    <svg class="cv-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="market cap rises from ${sol(m0)} to ${sol(m1)} as the curve raises ${B} SOL">
+      <defs><linearGradient id="cvg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ffd29a" stop-opacity=".22"/><stop offset="1" stop-color="#ffd29a" stop-opacity="0"/></linearGradient></defs>
+      <g class="cv-g">${grid}${xt}<text x="${W - P.r}" y="${H - 10 - 14}" text-anchor="end" class="cv-u">SOL raised →</text><text x="${P.l - 8}" y="${P.t + 2}" text-anchor="end" class="cv-u">mcap</text></g>
+      <path d="${d}L${X(B)} ${H - P.b}L${X(0)} ${H - P.b}Z" fill="url(#cvg)"/><path class="cv-l" d="${d}"/>
+      <line class="cv-grad" x1="${X(B)}" x2="${X(B)}" y1="${P.t}" y2="${H - P.b}"/>
+      <circle class="cv-p" cx="${X(0)}" cy="${Y(m0)}" r="4"/><circle class="cv-p cv-e" cx="${X(B)}" cy="${Y(m1)}" r="5"/>
+      <text class="cv-t" x="${X(0) + 12}" y="${Y(m0) - 26}">birth · ${sol(m0)}</text><text class="cv-t" x="${X(B) - 10}" y="${Y(m1) - 2}" text-anchor="end">graduation · ${sol(m1)}</text>
+    </svg>
+    <div class="cv-k"><div><b>${sol(m0)}</b><span>market cap at birth</span></div><div><b>${B} SOL</b><span>raised to graduate</span></div><div><b>${sol(m1)}</b><span>market cap at graduation</span></div><div><b>${(t.sold / 1e6).toFixed(1)}M</b><span>of 1B tokens sold on the curve</span></div></div>
+    <div class="cv-fee" aria-label="the 1% trading fee"><span style="flex:${f.creator}"><b>${f.creator}%</b> creator</span><span style="flex:${f.v01d}"><b>${f.v01d}%</b> treasury</span><span style="flex:${f.raydium}"><b>${f.raydium}%</b> raydium</span></div>
+    <p class="d" style="margin-top:10px">every trade on the curve pays 1%, split as above. at ${B} SOL the coin graduates: the SOL and the remaining tokens move into a raydium cpmm pool, ${t.lp.burnedPct}% of its liquidity is burned and ${t.lp.lockedPct}% locked for good. the shape is raydium's program, the same for every coin; nobody can change it after birth.</p>`);
+  return b;
+}
 function pow(challenge, bits, onP) { return new Promise((res, rej) => { const w = new Worker('/assets/pow.js'); w.onmessage = e => { if (e.data.done) { w.terminate(); res(e.data); } else onP(e.data); }; w.onerror = () => { w.terminate(); rej(new Error('Proof of work failed in this browser.')); }; w.postMessage({ challenge, bits }); }); }
 
 export function launchForm(wallet) {
@@ -35,7 +61,7 @@ export function launchForm(wallet) {
     <div class="imgrow" style="margin-top:12px"><div class="pv" data-pv>image</div><div class="row"><button type="button" class="btn ghost sm" data-pick>choose image</button><input type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden data-file><span class="d" data-info>redrawn here. its hidden data never leaves your device.</span></div></div>
     <div class="seg" data-seg>${wallet ? '<button type="button" class="on" data-m="wallet">your wallet</button>' : '<button type="button" class="on" data-m="key">a key born here</button><button type="button" data-m="own">an address I own</button>'}</div>
     <div data-modebox></div>
-    <div class="row" style="margin-top:12px"><button type="button" class="btn" data-go>${wallet ? 'sign &amp; launch' : 'launch'}</button><span class="d">${wallet ? 'your wallet pays raydium and any dev buy' : 'free. nothing to connect, sign or pay.'}</span></div>
+    <div class="row" style="margin-top:12px"><button type="button" class="btn" data-go>${wallet ? 'sign &amp; launch' : 'launch'}</button><span class="d">${wallet ? 'your wallet pays raydium and any dev buy' : 'free. nothing to connect, sign or pay.'}</span><span class="tok c" data-run="curve" style="margin-left:auto">the curve ›</span></div>
     <div class="err" data-err></div>`);
   const q = s => b.querySelector(s), fld = n => q(`[name=${n}]`).value.trim(), err = t => { q('[data-err]').textContent = t || ''; };
   q('[data-pick]').onclick = () => q('[data-file]').click();
@@ -86,7 +112,7 @@ async function privateLaunch(f, S, creator) {
   line(dots('mint', `<span class="h">${j.mint}</span>`));
   await confirm(j.status, j.id);
   line(''); line(`<span class="h">■ ${esc(f.name)} ($${esc(f.symbol)}) is live.</span> <span class="m">its creator is a key nobody else has seen.</span>`);
-  line(`  <a href="https://jup.ag/tokens/${j.mint}" target="_blank" rel="noopener noreferrer">jupiter ↗</a>   <a href="https://solscan.io/tx/${j.sig}" target="_blank" rel="noopener noreferrer">transaction ↗</a>   <span class="d">claim fees later with</span> <span class="c">claim</span>`);
+  line(`  <a href="https://raydium.io/launchpad/token/?mint=${j.mint}" target="_blank" rel="noopener noreferrer">raydium ↗</a>   <a href="https://jup.ag/tokens/${j.mint}" target="_blank" rel="noopener noreferrer">jupiter ↗</a>   <a href="https://solscan.io/tx/${j.sig}" target="_blank" rel="noopener noreferrer">transaction ↗</a>   <span class="d">claim fees later with</span> <span class="c">claim</span>`);
 }
 async function walletLaunch(f, S, buy) {
   buy = Math.max(0, Math.min(10, buy));
@@ -105,7 +131,7 @@ async function walletLaunch(f, S, buy) {
   line(dots('mint', `<span class="h">${r.mint}</span>`));
   await confirm(r.status, r.id);
   line(''); line(`<span class="h">■ ${esc(f.name)} ($${esc(f.symbol)}) is live.</span> <span class="m">launched from your wallet${buy ? `, ${buy} SOL bought first` : ''}.</span>`);
-  line(`  <a href="https://jup.ag/tokens/${r.mint}" target="_blank" rel="noopener noreferrer">jupiter ↗</a>   <a href="https://solscan.io/tx/${r.sig}" target="_blank" rel="noopener noreferrer">transaction ↗</a>`);
+  line(`  <a href="https://raydium.io/launchpad/token/?mint=${r.mint}" target="_blank" rel="noopener noreferrer">raydium ↗</a>   <a href="https://jup.ag/tokens/${r.mint}" target="_blank" rel="noopener noreferrer">jupiter ↗</a>   <a href="https://solscan.io/tx/${r.sig}" target="_blank" rel="noopener noreferrer">transaction ↗</a>`);
 }
 async function confirm(st, id) {
   const C = spinner('waiting for confirmation'); let n = 0;
@@ -148,6 +174,6 @@ export async function coinsTable(run) {
   const j = await api('coins', { params: { limit: 50 } }); const l = (j.coins || []).filter(c => c.status !== 'failed');
   if (!l.length) return L.done('<span class="m">no coins launched here yet. type</span> <span class="c">launch</span> <span class="m">to be first.</span>');
   L.done(`<span class="o">✓</span> ${l.length} coin${l.length > 1 ? 's' : ''} launched on v01d`);
-  const b = block(`coins · launched on v01d · ${l.length}`, `<div style="overflow:auto"><table class="tbl"><thead><tr><th></th><th>coin</th><th class="n">mcap</th><th class="n">curve</th><th>creator</th><th class="n">age</th><th></th></tr></thead><tbody>${l.map(c => `<tr><td><img src="${esc(c.img)}" alt=""></td><td><span class="tok" data-run="token ${esc(c.mint)}"><b>$${esc(c.symbol)}</b></span> <span class="d">${esc(c.name)}</span></td><td class="n">${usd(c.mcapUsd)}</td><td class="n">${c.graduated ? 'graduated' : c.progress != null ? Math.round(c.progress * 100) + '%' : c.status === 'sending' ? 'confirming' : '—'}</td><td class="d">${short(c.creator)}</td><td class="n d">${ago(c.at)}</td><td><a href="https://jup.ag/tokens/${esc(c.mint)}" target="_blank" rel="noopener noreferrer">jupiter ↗</a></td></tr>`).join('')}</tbody></table></div>`);
+  const b = block(`coins · launched on v01d · ${l.length}`, `<div style="overflow:auto"><table class="tbl"><thead><tr><th></th><th>coin</th><th class="n">mcap</th><th class="n">curve</th><th>creator</th><th class="n">age</th><th></th></tr></thead><tbody>${l.map(c => `<tr><td><img src="${esc(c.img)}" alt=""></td><td><span class="tok" data-run="token ${esc(c.mint)}"><b>$${esc(c.symbol)}</b></span> <span class="d">${esc(c.name)}</span></td><td class="n">${usd(c.mcapUsd)}</td><td class="n">${c.graduated ? 'graduated' : c.progress != null ? Math.round(c.progress * 100) + '%' : c.status === 'sending' ? 'confirming' : '—'}</td><td class="d">${short(c.creator)}</td><td class="n d">${ago(c.at)}</td><td><a href="https://raydium.io/launchpad/token/?mint=${esc(c.mint)}" target="_blank" rel="noopener noreferrer">raydium ↗</a></td></tr>`).join('')}</tbody></table></div>`);
   return b;
 }

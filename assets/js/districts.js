@@ -22,7 +22,7 @@ export const DIST = {
     tag: 'the mint',
     line: 'a coin on raydium launchlab with no wallet, no signature and no SOL. the engine pays the launch, your picture is wiped of its metadata, and the creator key is born in this tab. once its curve has raised 85 SOL it graduates into a raydium pool: half the liquidity burned, half locked for good.',
     ui: () => `<div class="row2">${btn('launch', 'launch privately', 'pri')}${btn('launch --wallet', 'launch from a wallet or burner')}</div>
-      <div class="row2">${btn('coins', 'coins born here')}${btn('claim', 'claim creator fees')}${btn('cat launch.txt', 'how it works')}</div>
+      <div class="row2">${btn('coins', 'coins born here')}${btn('claim', 'claim creator fees')}${btn('curve', 'the curve')}${btn('cat launch.txt', 'how it works')}</div>
       ${priv('no wallet of yours touches a private launch. the engine pays and signs it; your key only ever claims.')}`,
     wire: wireButtons, first: run => run('launch'),
   },

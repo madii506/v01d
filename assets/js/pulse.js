@@ -14,6 +14,8 @@ const pc = v => Math.round(v) + '%';
 // the small print every trencher checks first: top 10 share, how many coins this dev has made, bots, bundles, socials
 function chips(t) {
   const c = [];
+  if (t.launchpad === 'letsbonk.fun') c.push('<i class="lp" title="born on bonk.fun, a platform on raydium launchlab">bonk.fun</i>');
+  else if (t.launchpad === 'raydium-launchlab') c.push('<i class="lp" title="born on raydium launchlab">launchlab</i>');
   if (t.top10 != null) c.push(`<i class="${t.top10 > 35 ? 'w' : ''}" title="top 10 holders own this share">top10 ${pc(t.top10)}</i>`);
   if (t.devMints != null && t.devMints > 1) c.push(`<i class="${t.devMints >= 20 ? 'w' : ''}" title="coins this dev has launched">dev ×${t.devMints}</i>`);
   if (t.bots != null && t.bots >= 1) c.push(`<i class="${t.bots > 20 ? 'w' : ''}" title="share held by bot wallets">bots ${pc(t.bots)}</i>`);

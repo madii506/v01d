@@ -3,7 +3,7 @@
 import { $, $$, api, esc, short, ago, usd, price, pct, amt, img, line, block, spinner, dots, sleep, clear, copy, toast, isAddr, unb64, b64, history, forgetHist, seen, SEEN, pic, CA } from './core.js';
 import * as SG from './signer.js';
 import { drawChart, spark } from './chart.js';
-import { launchForm, claimForm, coinsTable, engine, STATUS, WHY } from './launch.js';
+import { launchForm, claimForm, coinsTable, curveCard, engine, STATUS, WHY } from './launch.js';
 import { startPulse, stopPulse, setPulseRunner } from './pulse.js';
 
 export const CMDS = {}, ALIAS = {};
@@ -41,6 +41,7 @@ def('launch', 'launch', 'launch [--wallet]', 'a coin on raydium launchlab. priva
   launchForm(a.includes('--wallet') || a.includes('wallet'));
 });
 def('coins', 'launch', 'coins', 'every coin launched on v01d', () => coinsTable());
+def('curve', 'launch', 'curve', 'how every coin climbs the raydium launchlab curve: market cap from birth to graduation, the 1% fee split, the liquidity', async () => { if (!STATUS) await engine(); curveCard(); }, ['bonding', 'graduation']);
 def('claim', 'launch', 'claim', 'claim creator fees with your key file or wallet; the network fee is paid for you', () => claimForm());
 
 // ---------------------------------------------------------------- TRADE
