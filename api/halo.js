@@ -1,4 +1,4 @@
-// v01d API (the launch engine, on Meteora's dynamic bonding curve). One function, many ops: status, pow, launch, launches, coins, meta, img, claim, claimbuild,
+// v01d API (the launch engine, on Raydium LaunchLab). One function, many ops: status, pow, launch, launches, coins, meta, img, claim, claimbuild,
 // claimsend, withdrawbuild, withdrawsend, walletbuild, walletsend, wclaimbuild, wclaimsend, dryrun, tick, here.
 const crypto = require('crypto');
 const L = require('./_lib');
@@ -74,7 +74,8 @@ async function status() {
     launchesLeft: bal === null ? null : Math.max(0, Math.floor((bal - 5_000_000) / avg)),
     today: t.today, cap: CFG.cap, perIp: CFG.perIp, launched: t.launched,
     last: last[0] ? { name: last[0].name, symbol: last[0].symbol, mint: last[0].mint, at: last[0].created_at } : null,
-    powBits: CFG.bits, ca: CFG.ca, x: CFG.x, venue: 'meteora', mock: C.MOCK || undefined,
+    powBits: CFG.bits, ca: CFG.ca, x: CFG.x, venue: 'raydium', terms: C.TERMS, platform: await C.configAddress(),
+    platformLive: await L.cached('platlive', 30000, () => C.configExists()).catch(() => null), mock: C.MOCK || undefined,
   };
 }
 
@@ -244,7 +245,7 @@ async function here(req) {
   return { ok: true, n: r[0] ? Number(r[0].n) : 0 };
 }
 
-// ---------- the creator's coins born here (on Meteora each coin's pool holds its own creator fees) ----------
+// ---------- the creator's coins born here (on LaunchLab one vault per creator holds the fees of all their coins) ----------
 async function creatorMints(creator) {
   if (!L.dbReady()) return [];
   await L.schema();
@@ -351,7 +352,7 @@ module.exports = async (req, res) => {
         console.error(e);
         return L.send(res, 500, { ok: false, dryRun: true, error: String(e && e.message || e).replace(/https?:\/\/\S+/g, '[url]').slice(0, 240) });
       }
-      return L.send(res, 200, { ok: true, dryRun: true, venue: 'meteora dbc', config: await C.configAddress(), configLive: await C.configExists(), payer: sim.payer, mint: k.mint.publicKey.toBase58(), creator: kp, result: sim, costSol: sim.ok ? sol(sim.need) : null });
+      return L.send(res, 200, { ok: true, dryRun: true, venue: 'raydium launchlab', platform: await C.configAddress(), platformLive: await C.configExists(), standIn: !!sim.standIn, payer: sim.payer, mint: k.mint.publicKey.toBase58(), creator: kp, result: sim, costSol: sim.ok ? sol(sim.need) : null, terms: C.TERMS });
     }
     if (op === 'tick') {
       await L.schema();

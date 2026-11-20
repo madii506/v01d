@@ -85,13 +85,13 @@ async function trending(w) {
   w = ['5m', '1h', '6h', '24h'].includes(w) ? w : '1h';
   return L.cached('tr:' + w, 30000, async () => (await jup(`/tokens/v2/toptrending/${w}?limit=30`) || []).map(shape));
 }
-// every launchpad that runs on Meteora's dynamic bonding curve, as jupiter names them
-const METEORA = ['met-dbc', 'bags.fun', 'jup-studio'];
-const onMeteora = x => METEORA.includes(x && x.launchpad);
-async function recentPump() {          // the newest coins born on meteora (the name stays for the callers)
+// every launchpad that runs on Raydium LaunchLab, as jupiter names them (bonk.fun is a LaunchLab platform too)
+const LAUNCHLAB = ['raydium-launchlab', 'letsbonk.fun'];
+const onRaydium = x => LAUNCHLAB.includes(x && x.launchpad);
+async function recentPump() {          // the newest coins born on raydium launchlab (the name stays for the callers)
   return L.cached('recent', 4000, async () => {
     try { const g = await gems(); if (g.fresh.length) return g.fresh.slice(0, 30); } catch {}
-    return (await jup('/tokens/v2/recent') || []).filter(onMeteora).map(shape).slice(0, 30);
+    return (await jup('/tokens/v2/recent') || []).filter(onRaydium).map(shape).slice(0, 30);
   });
 }
 async function stocks() {
@@ -282,11 +282,11 @@ async function trades(mint) {
     }));
   });
 }
-// the scanner's first source (coins born on meteora): jupiter's own gems feed (new / about to graduate / graduated, each with its bonding curve,
+// the scanner's first source (coins born on raydium launchlab): jupiter's own gems feed (new / about to graduate / graduated, each with its bonding curve,
 // audit and bundler numbers). the token lists below are the fallback, with the curve read from the chain.
 function gems() { return L.cached('gems', 3000, gemsRaw); }
 async function gemsRaw() {
-  const f = { launchpads: METEORA };
+  const f = { launchpads: LAUNCHLAB };
   const r = await fetch('https://datapi.jup.ag/v1/pools/gems', { method: 'POST', headers: { accept: 'application/json', 'content-type': 'application/json' }, body: JSON.stringify({ recent: f, aboutToGraduate: f, graduated: f }), signal: AbortSignal.timeout(6000) });
   if (!r.ok) throw new Error('gems ' + r.status);
   const j = await r.json();
@@ -327,7 +327,7 @@ async function pulse() {
     try { return { at: Date.now(), src: 'jupiter', ...(await gems()) }; } catch {}
     const src = await Promise.allSettled([jup('/tokens/v2/recent'), jup('/tokens/v2/toptrending/5m?limit=100'), jup('/tokens/v2/toptrending/1h?limit=100'), jup('/tokens/v2/toporganicscore/5m?limit=100')]);
     const all = new Map();
-    for (const r of src) if (r.status === 'fulfilled') for (const x of r.value || []) if (onMeteora(x) && !all.has(x.id)) all.set(x.id, shape(x));
+    for (const r of src) if (r.status === 'fulfilled') for (const x of r.value || []) if (onRaydium(x) && !all.has(x.id)) all.set(x.id, shape(x));
     const list = [...all.values()], live = list.filter(t => !t.grad).slice(0, 120);
     let cur = {}; try { cur = await C.coinStats(live.map(t => t.mint)); } catch {}
     for (const t of list) { const c = cur[t.mint]; t.progress = t.grad ? 1 : c ? c.progress : null; if (c && c.complete) t.grad = true; }
