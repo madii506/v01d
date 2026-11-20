@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en" class="gate-on">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>v01d</title>
+<meta name="description" content="enter the world in private. a world on solana where every building is a working app and nobody has a name: launch on pump.fun with no wallet, swap on every dex, buy tokenized stocks, set limit orders, trade from a burner.">
+<meta name="theme-color" content="#030304">
+<meta property="og:title" content="v01d">
+<meta property="og:description" content="enter the world in private.">
+<meta property="og:image" content="https://v01d.vercel.app/assets/img/og.jpg">
+<meta property="og:url" content="https://v01d.vercel.app/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="v01d">
+<meta name="twitter:description" content="enter the world in private.">
+<meta name="twitter:image" content="https://v01d.vercel.app/assets/img/og.jpg">
+<link rel="icon" href="/assets/img/mark-32.png?v=1" sizes="32x32">
+<link rel="icon" href="/assets/img/mark-64.png?v=1" sizes="64x64">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=1">
+<link rel="preload" href="/assets/fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/css/engine.css?v=1">
+<link rel="stylesheet" href="/assets/css/v01d.css?v=1">
+</head>
+<body>
+<canvas id="w" aria-label="the world"></canvas>
+<noscript><p class="nojs">v01d is a 3D world and a working terminal. it needs javascript.</p></noscript>
+
+<!-- the gate: a hole in the dark. click it to go in -->
+<div id="gate" role="dialog" aria-label="enter">
+  <button type="button" id="enter" aria-label="enter the world">
+    <svg viewBox="-60 -60 120 120" aria-hidden="true"><circle r="34" class="g-hole"/><rect x="-46" y="-3.4" width="92" height="6.8" rx="1" class="g-slash" transform="rotate(-45)"/><circle r="50" class="g-ring"/></svg>
+  </button>
+  <p class="g-k" aria-hidden="true"><span>enter</span></p>
+  <button type="button" id="g-snd" class="g-snd" aria-pressed="false" aria-label="sound"><i></i><span>sound off</span></button>
+</div>
+<button type="button" id="skip" hidden>skip ›</button>
+
+<!-- the world's heads-up: name, districts, signer, live feed, chain status, map -->
+<div id="hud" hidden>
+  <header class="top">
+    <a class="brand" href="#/" aria-label="v01d, back to the landing">
+      <svg viewBox="-60 -60 120 120" aria-hidden="true"><circle r="40" class="b-hole"/><rect x="-54" y="-5" width="108" height="10" rx="1" class="b-slash" transform="rotate(-45)"/></svg>
+      <b>v<i class="zs">0</i>1d</b>
+    </a>
+    <nav class="dnav" id="dnav" aria-label="districts"></nav>
+    <div class="topr">
+      <button type="button" class="chip" id="sig" title="who signs: your wallet or a burner"><i class="dot"></i><span>no signer</span></button>
+      <button type="button" class="chip ic" id="snd" title="sound" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="w1" d="M16.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M19 6a8.5 8.5 0 0 1 0 12"/></svg></button>
+      <button type="button" class="chip ic" id="kbtn" title="the terminal (press /)"><span class="kb">/</span></button>
+    </div>
+  </header>
+  <div id="labels" aria-hidden="true"></div>
+  <aside class="feed" id="feed" aria-label="new on pump.fun"><h4><i class="live"></i><span>born on pump.fun</span><em id="feed-at">—</em></h4><ol id="feed-l"></ol></aside>
+  <div class="dock">
+    <div class="net" id="net"><span><em>SOL</em><b id="n-sol">—</b></span><span><em>slot</em><b id="n-slot">—</b></span><span><em>tps</em><b id="n-tps">—</b></span><span><em>anons here</em><b id="n-here">—</b></span></div>
+    <svg class="mini" id="mini" viewBox="-100 -100 200 200" aria-label="map of the districts"></svg>
+  </div>
+  <p class="w-hint" id="hint"><span class="hd">drag to look around · click a district · <kbd>ctrl k</kbd> goes anywhere</span><span class="hm">drag to look around · tap a district</span></p>
+</div>
+
+<!-- a district: the building's own controls on top, the engine underneath -->
+<section id="panel" class="panel" hidden aria-live="polite">
+  <header class="p-h"><div><small id="p-no">00</small><h2 id="p-name">—</h2></div><button type="button" class="p-x" id="p-x" aria-label="close">✕</button></header>
+  <p class="p-line" id="p-line"></p>
+  <div class="p-acts" id="p-acts"></div>
+  <div class="deck" id="deck">
+    <div class="ctabs" id="ctabs"><button type="button" class="on" data-tab="out">console</button><button type="button" data-tab="pulse">scanner <i class="live"></i></button><button type="button" data-tab="chart">chart</button><button type="button" data-tab="orders">orders</button><span class="ctab-r" id="signer">signer: <b>none</b></span></div>
+    <div class="out" id="out" aria-live="polite"></div>
+    <div class="chartbox" id="chartbox" hidden><div class="ch-h" id="ch-h"></div><canvas id="chart"></canvas><div class="ch-tf" id="ch-tf"></div><div class="ch-tr" id="ch-tr"></div></div>
+    <div class="ordbox" id="ordbox" hidden></div>
+    <div class="pulsebox" id="pulsebox" hidden></div>
+    <form class="tin" id="tin" autocomplete="off"><label for="cmd" class="ps" id="ps">v01d:~$</label><div class="inw"><span class="sugg" id="ghost" aria-hidden="true"></span><input id="cmd" spellcheck="false" autocapitalize="off" autocomplete="off" enterkeyhint="send" aria-label="command" placeholder="type a command · help"></div></form>
+  </div>
+</section>
+
+<!-- the library opens as a page of its own, over the world -->
+<article id="lib" class="lib" hidden></article>
+
+<div id="pal" class="pal" hidden role="dialog" aria-label="go anywhere"><div class="pal-b"><input id="pal-in" placeholder="go anywhere: a district or any command" spellcheck="false" autocomplete="off"><div id="pal-l" class="pal-l"></div></div></div>
+<div id="toast" role="status"></div>
+<div id="cmds" hidden></div>
+<script src="/assets/nacl-fast.min.js"></script>
+<script type="module" src="/assets/js/app.js?v=1"></script>
+</body>
+</html>
