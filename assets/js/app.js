@@ -3,7 +3,7 @@ import { $, $$, esc, api, sleep, line, clear, toast, usd, price, ago, short, img
 import { CMDS, ALIAS, setRunner, showTab, chartHover, chartRedraw } from './cmds.js';
 import { setExtraRunner, aliasOf, counted, stopTop } from './extra.js';
 import * as SG from './signer.js';
-import { createV01d, DISTRICTS } from '../v01d-3d.js?v=5';
+import { createV01d, DISTRICTS } from '../v01d-3d.js?v=6';
 import { DIST, manual } from './districts.js';
 import { initPrompt } from './prompt.js';
 import { createScore } from './score.js';
@@ -256,4 +256,4 @@ window.addEventListener('v01d:intro', () => { close(); $('#hud').hidden = true; 
 const DEEP = !!DIST[location.hash.replace(/^#\//, '')] && !Q.has('intro');
 const boot = () => { if (REDUCED || (ss.get('v01d:intro') && !Q.has('intro')) || !V || DEEP) { if (V) V.world(); showWorld(); } else startIntro(); };
 // the intro waits (black, a moment) until the 3D has compiled everything, so its first seconds never stutter
-if (V && V.ready) Promise.race([V.ready, sleep(3500)]).then(boot, boot); else boot();
+if (V && V.ready) Promise.race([V.ready, sleep(7000)]).then(boot, boot); else boot();
