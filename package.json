@@ -1,18 +1,1 @@
-{
-  "name": "v01d",
-  "private": true,
-  "description": "enter the world in private.",
-  "engines": {
-    "node": "22.x"
-  },
-  "dependencies": {
-    "@meteora-ag/dynamic-bonding-curve-sdk": "2.0.0",
-    "@neondatabase/serverless": "^1.0.0",
-    "@solana/spl-token": "0.4.14",
-    "@solana/web3.js": "1.98.4",
-    "bn.js": "5.2.2"
-  },
-  "overrides": {
-    "rpc-websockets": "9.3.3"
-  }
-}
+{"name":"v01d","private":true,"description":"enter the world in private.","engines":{"node":"22.x"},"dependencies":{"@neondatabase/serverless":"^1.0.0","@raydium-io/raydium-sdk-v2":"0.2.81-alpha","@solana/spl-token":"0.4.15","@solana/web3.js":"1.99.0","bn.js":"5.2.2"},"overrides":{"rpc-websockets":"9.3.3"}}
