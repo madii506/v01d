@@ -3,9 +3,10 @@ import { $, $$, esc, api, sleep, line, clear, toast, usd, price, ago, short, img
 import { CMDS, ALIAS, setRunner, showTab, chartHover, chartRedraw } from './cmds.js';
 import { setExtraRunner, aliasOf, counted, stopTop } from './extra.js';
 import * as SG from './signer.js';
-import { createV01d, DISTRICTS } from '../v01d-3d.js?v=4';
+import { createV01d, DISTRICTS } from '../v01d-3d.js?v=5';
 import { DIST, manual } from './districts.js';
 import { initPrompt } from './prompt.js';
+import { createScore } from './score.js';
 
 const Q = new URLSearchParams(location.search);
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -77,54 +78,29 @@ $('#pal-in').addEventListener('keydown', e => {
 $('#pal-l').addEventListener('click', e => { const d = e.target.closest('[data-i]'); if (d) pickPal(+d.dataset.i); });
 $('#pal').addEventListener('click', e => { if (e.target.id === 'pal') closePal(); });
 
-// ---------------------------------------------------------------- sound: off unless asked; the room hums, the void breathes
-const SND = { on: ls.get('v01d:snd') === '1', ctx: null, g: null, hum: null, low: null };
-function soundStart() {
-  if (SND.ctx) { SND.ctx.resume(); SND.g.gain.setTargetAtTime(.5, SND.ctx.currentTime, .4); return; }
-  const C = new (window.AudioContext || window.webkitAudioContext)(); SND.ctx = C;
-  const g = C.createGain(); g.gain.value = 0; g.connect(C.destination); SND.g = g;
-  // the fluorescent hum: a buzz at 120 Hz, its harmonics through a band-pass
-  const hum = C.createGain(); hum.gain.value = .0; hum.connect(g); SND.hum = hum;
-  const o1 = C.createOscillator(); o1.type = 'sawtooth'; o1.frequency.value = 120; const bp = C.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 480; bp.Q.value = 6;
-  o1.connect(bp); bp.connect(hum); o1.start();
-  const o2 = C.createOscillator(); o2.type = 'sine'; o2.frequency.value = 60; const g2 = C.createGain(); g2.gain.value = .35; o2.connect(g2); g2.connect(hum); o2.start();
-  // the void: two detuned low sines and filtered noise, slowly breathing
-  const low = C.createGain(); low.gain.value = 0; low.connect(g); SND.low = low;
-  [[43.65, .5], [43.9, .45], [87.3, .12]].forEach(([f, v]) => { const o = C.createOscillator(); o.frequency.value = f; const gg = C.createGain(); gg.gain.value = v; o.connect(gg); gg.connect(low); o.start(); });
-  const n = C.createBufferSource(), buf = C.createBuffer(1, C.sampleRate * 2, C.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-  n.buffer = buf; n.loop = true; const lp = C.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 260; const ng = C.createGain(); ng.gain.value = .06; n.connect(lp); lp.connect(ng); ng.connect(low); n.start();
-  const lfo = C.createOscillator(); lfo.frequency.value = .07; const lg = C.createGain(); lg.gain.value = .25; lfo.connect(lg); lg.connect(low.gain); lfo.start();
-  g.gain.setTargetAtTime(.5, C.currentTime, .6);
+// ---------------------------------------------------------------- sound: on unless you turn it off. the score is written in code (score.js)
+const SND = { on: ls.get('v01d:snd') !== '0' };
+const score = createScore();
+function sndLabel() {
+  const st = score.state(), on = SND.on && st === 'on';
+  $('#snd').setAttribute('aria-pressed', on); $('#isnd').setAttribute('aria-pressed', on);
+  $('#isnd span').textContent = !SND.on ? 'sound off' : st === 'waiting' ? 'tap for sound' : 'sound on';
+  $('#isnd').classList.toggle('wait', SND.on && st === 'waiting');
 }
-function soundStop() { if (SND.ctx) SND.g.gain.setTargetAtTime(0, SND.ctx.currentTime, .3); }
-// a coin is born somewhere: a far, soft chime. a building opens: a low breath of air. both quiet, both only with sound on.
-function soundPing() {
-  if (!SND.on || !SND.ctx) return; const C = SND.ctx, t = C.currentTime + .02;
-  [[392, .035], [587.3, .018], [784.6, .008]].forEach(([f, v]) => { const o = C.createOscillator(), g = C.createGain(); o.type = 'sine'; o.frequency.value = f * (1 + (Math.random() - .5) * .006);
-    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .015); g.gain.exponentialRampToValueAtTime(.0001, t + 3.2); o.connect(g); g.connect(SND.g); o.start(t); o.stop(t + 3.3); });
-}
-function soundOpen() {
-  if (!SND.on || !SND.ctx) return; const C = SND.ctx, t = C.currentTime + .01;
-  const o = C.createOscillator(), g = C.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(74, t); o.frequency.exponentialRampToValueAtTime(41, t + .35);
-  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.16, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + .7); o.connect(g); g.connect(SND.g); o.start(t); o.stop(t + .75);
-  const n = C.createBufferSource(), b = C.createBuffer(1, C.sampleRate * .5, C.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
-  const f = C.createBiquadFilter(); f.type = 'bandpass'; f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(260, t + .45); f.Q.value = .8;
-  const ng = C.createGain(); ng.gain.value = .045; n.buffer = b; n.connect(f); f.connect(ng); ng.connect(SND.g); n.start(t);
-}
-function soundScene(k) {      // 'room' | 'dark' | 'void'
-  if (!SND.ctx) return; const t = SND.ctx.currentTime;
-  SND.hum.gain.setTargetAtTime(k === 'room' ? .09 : 0, t, k === 'dark' ? .02 : .5);
-  SND.low.gain.setTargetAtTime(k === 'void' ? .55 : k === 'dark' ? .25 : 0, t, 1.2);
-}
-function setSound(on) {
-  SND.on = on; ls.set('v01d:snd', on ? '1' : '0');
-  $('#snd').setAttribute('aria-pressed', on); $('#isnd').setAttribute('aria-pressed', on); $('#isnd span').textContent = on ? 'sound on' : 'sound off';
-  if (on) { soundStart(); soundScene(introScene()); } else soundStop();
-}
+score.onState(sndLabel);
+function soundStart() { score.start(); sndLabel(); }
+function soundStop() { score.mute(); sndLabel(); }
+function soundPing() { score.ping(); }
+function soundOpen() { score.open(); }
+function setSound(on) { SND.on = on; ls.set('v01d:snd', on ? '1' : '0'); if (on) soundStart(); else soundStop(); }
+// browsers let sound start only after a tap or a key: the first one anywhere wakes it (and that tap doesn't also mute it)
+let woke = 0;
+['pointerdown', 'keydown', 'touchstart'].forEach(ev => addEventListener(ev, () => { if (SND.on && score.state() !== 'on') { woke = performance.now(); soundStart(); } }, { capture: true, passive: true }));
+const toggleSound = () => { if (performance.now() - woke < 800) return; setSound(!SND.on); };
 window.addEventListener('v01d:sound', e => setSound(e.detail === 'on' ? true : e.detail === 'off' ? false : !SND.on));
-$('#snd').onclick = () => setSound(!SND.on);
-$('#isnd').onclick = () => setSound(!SND.on);
-$('#isnd').setAttribute('aria-pressed', SND.on); $('#isnd span').textContent = SND.on ? 'sound on' : 'sound off';
+$('#snd').onclick = toggleSound;
+$('#isnd').onclick = toggleSound;
+sndLabel();
 
 // ---------------------------------------------------------------- the world
 let V = null;
@@ -257,11 +233,10 @@ function live() { feed(); net(); here(); liveTags(); clearInterval(liveT); liveT
 // ---------------------------------------------------------------- the intro: it starts by itself
 let introOn = false, introT0 = 0;
 const gateOpen = () => false;
-const introScene = () => { if (!V || V.mode === 'world') return 'void'; const t = (performance.now() - introT0) / 1000; return t > 13.7 ? 'void' : t > 8.6 ? 'dark' : 'room'; };
 function showWorld() {
   introOn = false; $('#skip').hidden = true; $('#isnd').hidden = true; document.documentElement.classList.remove('intro-on'); $('#hud').hidden = false;
   requestAnimationFrame(() => { document.body.classList.add('world'); measure(); });
-  soundScene('void'); live();
+  if (SND.on) soundStart(); score.world(); live();
   const h = location.hash.replace(/^#\//, ''); if (h && DIST[h]) setTimeout(() => go(h), 600);
   setTimeout(() => $('#hint').classList.add('gone'), 9000);
 }
@@ -271,9 +246,7 @@ function startIntro() {
   if (!V) { showWorld(); return; }
   introOn = true; introT0 = performance.now(); document.documentElement.classList.add('intro-on');
   $('#isnd').hidden = false; setTimeout(() => { if (introOn) $('#skip').hidden = false; }, 1200);
-  if (SND.on) { soundStart(); soundScene('room'); }
-  // the hum thins as the lights die around the desk; the void opens as the screen throws you in
-  setTimeout(() => introOn && soundScene('dark'), 8600); setTimeout(() => introOn && soundScene('void'), 13700);
+  score.intro(introT0); if (SND.on) soundStart();          // the score follows the intro's clock, even if sound only starts after a tap
   V.intro(showWorld);
 }
 $('#skip').onclick = skipIntro;
@@ -281,5 +254,6 @@ window.addEventListener('v01d:intro', () => { close(); $('#hud').hidden = true; 
 
 // the first visit in a tab plays the intro; a reload, a link straight to a district, or reduced motion goes straight in
 const DEEP = !!DIST[location.hash.replace(/^#\//, '')] && !Q.has('intro');
-if (REDUCED || (ss.get('v01d:intro') && !Q.has('intro')) || !V || DEEP) { if (V) V.world(); showWorld(); }
-else startIntro();
+const boot = () => { if (REDUCED || (ss.get('v01d:intro') && !Q.has('intro')) || !V || DEEP) { if (V) V.world(); showWorld(); } else startIntro(); };
+// the intro waits (black, a moment) until the 3D has compiled everything, so its first seconds never stutter
+if (V && V.ready) Promise.race([V.ready, sleep(3500)]).then(boot, boot); else boot();
