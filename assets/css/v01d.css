@@ -251,3 +251,6 @@ html.no3d #w{display:none}
 @media (max-width:640px){.cv-k{grid-template-columns:repeat(2,minmax(0,1fr))}.cv-fee{height:auto}.cv-fee span{flex:1 1 0!important;flex-direction:column;align-items:flex-start;gap:1px;padding:6px 8px;font-size:10px;line-height:1.25}}
 @media (prefers-reduced-motion:reduce){.cv-l{animation:none;stroke-dashoffset:0}.cv-e{animation:none}}
 .pz-x i.lp{color:#f6e6cf;border-color:rgba(255,210,154,.32);background:rgba(255,210,154,.07)}
+.g-snd.wait{animation:sndwait 1.8s ease-in-out infinite}
+@keyframes sndwait{50%{opacity:.5}}
+@media (prefers-reduced-motion:reduce){.g-snd.wait{animation:none}}
