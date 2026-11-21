@@ -6,6 +6,14 @@ body{color:var(--fg);-webkit-tap-highlight-color:transparent}
 #w{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;display:block;z-index:0;touch-action:none;cursor:grab}
 #w:active{cursor:grabbing}
 .nojs{position:fixed;inset:0;display:grid;place-items:center;color:var(--dim)}
+/* while the 3D gets ready: only the mark, breathing */
+#boot{position:fixed;inset:0;z-index:70;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity .5s ease}
+html.booting #boot{opacity:1}
+#boot svg{width:30px;height:30px;overflow:visible;animation:bootp 1.6s ease-in-out infinite}
+#boot circle{fill:none;stroke:var(--fg);stroke-width:7}
+#boot rect{fill:var(--fg)}
+@keyframes bootp{0%,100%{opacity:.18;transform:scale(.94)}50%{opacity:.75;transform:none}}
+html.no3d #boot{display:none}
 #cmd{caret-color:#fff}
 
 /* ---------------------------------------------------------------- during the intro */
@@ -53,7 +61,7 @@ body.world #hud{opacity:1}
 .lbl small{color:var(--faint);font-size:10px}
 .lbl b{font-size:12.5px;letter-spacing:.14em;font-weight:700}
 .lbl em{grid-column:1/-1;font-style:normal;color:var(--dim);font-size:10.5px;letter-spacing:.04em;margin-top:1px}
-.lbl::after{content:"";position:absolute;left:-2px;top:100%;width:1px;height:18px;background:linear-gradient(var(--fg),transparent)}
+.lbl::after{content:"";position:absolute;left:-2px;top:100%;width:1px;height:var(--lead,18px);background:linear-gradient(var(--fg),transparent)}
 .lbl:hover,.lbl.hov{background:var(--fg);color:#000;border-color:var(--warm)}
 .lbl:hover em,.lbl.hov em,.lbl:hover small,.lbl.hov small{color:#444}
 body.pan .lbl{opacity:.0!important;pointer-events:none}
@@ -82,6 +90,38 @@ body.pan .feed{opacity:0;transform:translateY(8px);pointer-events:none}
 .panel{position:fixed;z-index:20;right:16px;top:68px;bottom:16px;width:min(600px,46vw);transition:width .45s cubic-bezier(.2,.8,.2,1);display:grid;grid-template-rows:auto auto auto minmax(0,1fr);border:1px solid var(--edge2);border-radius:14px;background:var(--glass);backdrop-filter:blur(18px) saturate(1.1);-webkit-backdrop-filter:blur(18px) saturate(1.1);box-shadow:0 30px 80px rgba(0,0,0,.55);overflow:hidden}
 .panel.in{animation:panIn .5s cubic-bezier(.2,.8,.2,1) both}
 @keyframes panIn{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+.panel.in .p-h,.panel.in .p-line,.panel.in .p-acts,.panel.in .deck{animation:panRise .55s cubic-bezier(.2,.8,.2,1) both}
+.panel.in .p-line{animation-delay:.05s}.panel.in .p-acts{animation-delay:.1s}.panel.in .deck{animation-delay:.15s}
+@keyframes panRise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.panel.out{animation:panOut .24s cubic-bezier(.4,0,1,1) both;pointer-events:none}
+@keyframes panOut{to{opacity:0;transform:translateX(22px)}}
+/* the heads-up comes in a piece at a time once you are in the world */
+#hud .brand,#hud .dnav,#hud .topr,#hud .w-hint{opacity:0;transition:opacity .8s ease,transform 1s cubic-bezier(.2,.8,.2,1)}
+#hud .brand,#hud .dnav,#hud .topr{transform:translateY(-10px)}
+body.world #hud .brand{opacity:1;transform:none;transition-delay:.1s}
+body.world #hud .dnav{opacity:1;transform:none;transition-delay:.25s}
+body.world #hud .topr{opacity:1;transform:none;transition-delay:.4s}
+body.world:not(.pan) #hud .w-hint:not(.gone){opacity:1;transition-delay:1.2s}
+/* the labels arrive like lines on a terminal: the name, then its line types itself in */
+body.world .lbl b{animation:lblName .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(.45s + var(--i) * .085s)}
+body.world .lbl em{animation:lblType .75s steps(22,end) both;animation-delay:calc(.7s + var(--i) * .085s)}
+body.world .lbl::after{animation:lblLead .6s ease both;animation-delay:calc(.4s + var(--i) * .085s);transform-origin:top}
+@keyframes lblName{from{opacity:0;letter-spacing:.32em}to{opacity:1}}
+@keyframes lblType{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes lblLead{from{transform:scaleY(0)}to{transform:none}}
+.lbl b{transition:letter-spacing .25s}.lbl:hover b,.lbl.hov b{letter-spacing:.2em}
+/* the district bar: a soft pill glides under the one you point at */
+.dnav{position:relative}
+.dnav button{position:relative;z-index:1}
+.dn-gl{position:absolute;left:0;top:4px;bottom:4px;width:0;border-radius:7px;background:rgba(255,255,255,.075);opacity:0;pointer-events:none;z-index:0;transition:transform .38s cubic-bezier(.2,.8,.2,1),width .38s cubic-bezier(.2,.8,.2,1),opacity .25s}
+.dnav button.on{transition:color .25s,background .35s}
+/* the library: sections rise as you reach them */
+.lib section.rv{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .8s cubic-bezier(.2,.8,.2,1)}
+.lib section.rv.vis{opacity:1;transform:none}
+/* small things that answer when you touch them */
+.p-acts button,.chip{transition:transform .18s cubic-bezier(.2,.8,.2,1),background .2s,border-color .2s,color .2s}
+.p-acts button:hover,.chip:hover{transform:translateY(-1px)}
+.p-acts button:active,.chip:active{transform:translateY(1px) scale(.98)}
 .p-h{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px 2px}
 .p-h small{display:block;color:var(--faint);font-size:10.5px;letter-spacing:.14em;margin-bottom:4px}
 .p-h h2{margin:0;font-family:var(--disp);font-weight:700;font-size:30px;letter-spacing:.06em;line-height:1}
@@ -210,6 +250,8 @@ select.pin{flex:0 0 auto;appearance:none;-webkit-appearance:none;padding-right:2
   #cmd,#ghost,.pin{font-size:16px}
   .pin{height:38px}.pa{height:38px}.p-acts .seg{height:38px}
   .panel.in{animation:panUp .5s cubic-bezier(.2,.8,.2,1) both}
+  .panel.out{animation:panDown .24s cubic-bezier(.4,0,1,1) both}
+  @keyframes panDown{to{transform:translateY(40px);opacity:0}}
   @keyframes panUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
   .p-h h2{font-size:24px}
   .p-line{font-size:12px}
@@ -226,7 +268,7 @@ select.pin{flex:0 0 auto;appearance:none;-webkit-appearance:none;padding-right:2
 }
 html.no3d body{background:radial-gradient(120% 90% at 50% 0%,#17171a 0%,#030304 60%)}
 html.no3d #w{display:none}
-@media (prefers-reduced-motion:reduce){.panel.in,.lib{animation:none}}
+@media (prefers-reduced-motion:reduce){body.world .lbl b,body.world .lbl em,body.world .lbl::after{animation:none}.lib section.rv{opacity:1;transform:none}.panel.in,.panel.out,.lib,.panel.in .p-h,.panel.in .p-line,.panel.in .p-acts,.panel.in .deck,#boot svg{animation:none}#hud .brand,#hud .dnav,#hud .topr{transform:none;transition:opacity .3s}}
 /* the launchlab curve card */
 .cv-svg{display:block;width:100%;height:auto;margin:2px 0 10px;overflow:visible}
 .cv-g line{stroke:rgba(255,255,255,.07);stroke-width:1}
