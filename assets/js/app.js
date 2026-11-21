@@ -3,10 +3,10 @@ import { $, $$, esc, api, sleep, line, clear, toast, usd, price, ago, short, img
 import { CMDS, ALIAS, setRunner, showTab, chartHover, chartRedraw } from './cmds.js';
 import { setExtraRunner, aliasOf, counted, stopTop } from './extra.js';
 import * as SG from './signer.js';
-import { createV01d, DISTRICTS } from '../v01d-3d.js?v=6';
+import { createV01d, DISTRICTS } from '../v01d-3d.js?v=7';
 import { DIST, manual } from './districts.js';
 import { initPrompt } from './prompt.js';
-import { createScore } from './score.js';
+import { createScore } from './score.js?v=2';
 
 const Q = new URLSearchParams(location.search);
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -112,19 +112,31 @@ const LBL = {};
 DISTRICTS.forEach((d, i) => {
   const el = document.createElement('button'); el.type = 'button'; el.className = 'lbl'; el.dataset.d = d.id;
   el.innerHTML = `<small>${String(i + 1).padStart(2, '0')}</small><b>${d.name}</b><em>${esc(DIST[d.id].tag)}</em>`;
-  el.onclick = () => go(d.id); el.tabIndex = -1; $('#labels').appendChild(el); LBL[d.id] = el;
+  el.onclick = () => go(d.id); el.tabIndex = -1; el.style.setProperty('--i', i); $('#labels').appendChild(el); LBL[d.id] = el;
   el.onmouseenter = () => V && V.point(d.id); el.onmouseleave = () => V && V.point(null);
 });
 // labels keep inside the screen (a district at the edge still shows its name), and the far ones dim
-const LW = {}; let TOPB = 70; const measure = () => { for (const k in LBL) LW[k] = LBL[k].offsetWidth || 90; const t = $('.top'); TOPB = t ? t.getBoundingClientRect().bottom : 70; }; addEventListener('resize', measure);
+const LW = {}, LH = {}; let TOPB = 70, LREV = 0; const measure = () => { for (const k in LBL) { LW[k] = LBL[k].offsetWidth || 90; LH[k] = LBL[k].offsetHeight || 34; } const t = $('.top'); TOPB = t ? t.getBoundingClientRect().bottom : 70; }; addEventListener('resize', measure);
+// labels never sit on each other: the nearest district keeps its place, a farther one steps up out of the way (its leader
+// line grows to still reach its island). when the world first shows, they come in one after another.
+const placed = [];
 if (V) V.onLabels((list, th) => {
-  const vw = innerWidth;
-  for (const l of list) {
-    const el = LBL[l.id]; if (!el) continue; if (!LW[l.id]) measure();
-    const hw = LW[l.id] / 2, x = Math.min(vw - hw - 8, Math.max(hw + 8, l.x)), y = Math.max(l.y, TOPB + 8 + el.offsetHeight);
-    el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) translate(-50%, -100%)`;
-    el.style.opacity = l.on ? (l.d > 330 ? .6 : 1) : 0; el.style.zIndex = String(1000 - Math.round(l.d));
-  }
+  const vw = innerWidth, now = performance.now(); placed.length = 0;
+  list.slice().sort((a, b) => a.d - b.d).forEach(l => {
+    const el = LBL[l.id]; if (!el) return; if (!LW[l.id]) measure();
+    const w = LW[l.id], h = LH[l.id] || 34, hw = w / 2, x = Math.min(vw - hw - 8, Math.max(hw + 8, l.x)), y0 = Math.max(l.y, TOPB + 8 + h);
+    let y = y0;
+    if (l.on) for (let pass = 0; pass < 8; pass++) {
+      const hit = placed.find(b => x - hw < b.r + 6 && x + hw > b.l - 6 && y - h < b.b + 4 && y > b.t - 4);
+      if (!hit) break; y = hit.t - 4;
+    }
+    if (y < TOPB + 8 + h) y = y0;                                       // no room above: stay put rather than leave the screen
+    if (l.on) placed.push({ l: x - hw, r: x + hw, t: y - h, b: y });
+    const i = DISTRICTS.findIndex(d => d.id === l.id), rv = LREV ? Math.min(1, Math.max(0, (now - LREV - i * 85) / 520)) : 1, ev = 1 - Math.pow(1 - rv, 3);
+    el.style.transform = `translate3d(${x.toFixed(1)}px, ${(y + (1 - ev) * 10).toFixed(1)}px, 0) translate(-50%, -100%)`;
+    el.style.setProperty('--lead', (18 + Math.max(0, y0 - y)).toFixed(0) + 'px');
+    el.style.opacity = (l.on ? (l.d > 330 ? .6 : 1) : 0) * ev; el.style.zIndex = String(1000 - Math.round(l.d));
+  });
 });
 function hover(id) { $$('.lbl').forEach(el => el.classList.toggle('hov', el.dataset.d === id)); }
 // each label says one true, live thing about its district (falls back to its name when there is nothing to say)
@@ -140,20 +152,24 @@ async function liveTags() {
 
 // the district bar and the map
 $('#dnav').innerHTML = DISTRICTS.map((d, i) => `<button type="button" data-d="${d.id}"><small>${i + 1}</small>${d.name.toLowerCase()}</button>`).join('');
-$$('#dnav [data-d]').forEach(b => { b.onclick = () => go(b.dataset.d); b.onmouseenter = () => { if (V) V.point(b.dataset.d); hover(b.dataset.d); }; b.onmouseleave = () => { if (V) V.point(null); hover(null); }; });
+$$('#dnav [data-d]').forEach(b => { b.onclick = () => go(b.dataset.d); b.onmouseenter = () => { if (V) V.point(b.dataset.d); hover(b.dataset.d); glide(b); }; b.onmouseleave = () => { if (V) V.point(null); hover(null); }; });
+// a soft pill glides under whichever district you point at, and settles on the open one
+const GL = document.createElement('i'); GL.className = 'dn-gl'; $('#dnav').prepend(GL);
+function glide(b) { if (!b) { GL.style.opacity = 0; return; } GL.style.opacity = 1; GL.style.width = b.offsetWidth + 'px'; GL.style.transform = `translateX(${b.offsetLeft}px)`; }
+$('#dnav').addEventListener('mouseleave', () => glide($('#dnav [data-d].on')));
 {
 }
 
 // ---------------------------------------------------------------- panels: a building opens
 function open(id, { quiet = false } = {}) {
   const D = DIST[id]; if (!D) return;
-  const P = $('#panel'); P.dataset.d = id; P.hidden = false; document.body.classList.add('pan');
+  const P = $('#panel'); clearTimeout(closeT); P.classList.remove('out'); P.dataset.d = id; P.hidden = false; document.body.classList.add('pan');
   $('#lib').hidden = true;
   const i = DISTRICTS.findIndex(d => d.id === id);
   $('#p-no').textContent = String(i + 1).padStart(2, '0') + ' · ' + D.tag; $('#p-name').textContent = DISTRICTS[i].name; $('#p-line').innerHTML = D.line;
   $('#p-acts').innerHTML = D.ui();
   D.wire && D.wire($('#p-acts'), run);
-  $$('#dnav [data-d]').forEach(b => b.classList.toggle('on', b.dataset.d === id));
+  $$('#dnav [data-d]').forEach(b => b.classList.toggle('on', b.dataset.d === id)); glide($(`#dnav [data-d=${id}]`));
   P.classList.remove('in'); void P.offsetWidth; P.classList.add('in');
   if (V) { V.focus(id); reframe(); setTimeout(reframe, 480); }
   soundOpen();
@@ -161,9 +177,13 @@ function open(id, { quiet = false } = {}) {
   if (!quiet && D.first) { clear(); Promise.resolve(D.first(run)).then(() => toTop()); }
   if (location.hash !== '#/' + id) history.replaceState(null, '', '#/' + id);
 }
+let closeT = 0;
 function close() {
-  $('#panel').hidden = true; document.body.classList.remove('pan'); $('#lib').hidden = true;
-  $$('#dnav [data-d]').forEach(b => b.classList.remove('on'));
+  const P = $('#panel');
+  if (!P.hidden && !REDUCED) { P.classList.remove('in'); P.classList.add('out'); clearTimeout(closeT); closeT = setTimeout(() => { P.hidden = true; P.classList.remove('out'); }, 240); }
+  else P.hidden = true;
+  document.body.classList.remove('pan'); $('#lib').hidden = true;
+  $$('#dnav [data-d]').forEach(b => b.classList.remove('on')); glide(null);
   if (V) { V.focus(null); V.frame(0, 0); } history.replaceState(null, '', '#/');
 }
 // keep the open district in the part of the screen the panel leaves free
@@ -179,9 +199,11 @@ function go(id) {
   open(id);
 }
 function openLib() {
-  const L = $('#lib'); if (!L.dataset.built) { L.innerHTML = manual(); L.dataset.built = '1'; L.querySelector('.lib-x').onclick = () => close(); L.querySelectorAll('[data-go]').forEach(a => a.onclick = e => { e.preventDefault(); go(a.dataset.go); }); }
-  $('#panel').hidden = true; L.hidden = false; L.scrollTop = 0; document.body.classList.add('pan');
-  $$('#dnav [data-d]').forEach(b => b.classList.toggle('on', b.dataset.d === 'library'));
+  const L = $('#lib'); if (!L.dataset.built) { L.innerHTML = manual(); L.dataset.built = '1'; L.querySelector('.lib-x').onclick = () => close(); L.querySelectorAll('[data-go]').forEach(a => a.onclick = e => { e.preventDefault(); go(a.dataset.go); });
+    // each section rises into place the first time it scrolls into view
+    if ('IntersectionObserver' in window && !REDUCED) { const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('vis'); io.unobserve(e.target); } }), { root: L, threshold: .12 }); L.querySelectorAll('section').forEach(sc => { sc.classList.add('rv'); io.observe(sc); }); } }
+  clearTimeout(closeT); $('#panel').classList.remove('out'); $('#panel').hidden = true; L.hidden = false; L.scrollTop = 0; document.body.classList.add('pan');
+  $$('#dnav [data-d]').forEach(b => b.classList.toggle('on', b.dataset.d === 'library')); glide($('#dnav [data-d=library]'));
   if (V) { V.focus('library'); V.frame(0, 0); } history.replaceState(null, '', '#/library');
 }
 $('#p-x').onclick = close;
@@ -235,7 +257,8 @@ let introOn = false, introT0 = 0;
 const gateOpen = () => false;
 function showWorld() {
   introOn = false; $('#skip').hidden = true; $('#isnd').hidden = true; document.documentElement.classList.remove('intro-on'); $('#hud').hidden = false;
-  requestAnimationFrame(() => { document.body.classList.add('world'); measure(); });
+  document.documentElement.classList.remove('booting');
+  requestAnimationFrame(() => { document.body.classList.add('world'); measure(); LREV = performance.now() + 350; });
   if (SND.on) soundStart(); score.world(); live();
   const h = location.hash.replace(/^#\//, ''); if (h && DIST[h]) setTimeout(() => go(h), 600);
   setTimeout(() => $('#hint').classList.add('gone'), 9000);
@@ -244,7 +267,7 @@ function skipIntro() { if (!introOn) return; if (V) V.skip(); else showWorld(); 
 function startIntro() {
   ss.set('v01d:intro', '1');
   if (!V) { showWorld(); return; }
-  introOn = true; document.documentElement.classList.add('intro-on');
+  introOn = true; document.documentElement.classList.add('intro-on'); document.documentElement.classList.remove('booting');
   $('#isnd').hidden = false; setTimeout(() => { if (introOn) $('#skip').hidden = false; }, 1200);
   score.intro(performance.now());                            // the intro first, so waking the sound doesn't start the world's music
   if (SND.on) soundStart();                                  // the sound is built (a moment), then picture and sound start on the same clock
