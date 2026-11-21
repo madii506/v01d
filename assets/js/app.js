@@ -3,7 +3,7 @@ import { $, $$, esc, api, sleep, line, clear, toast, usd, price, ago, short, img
 import { CMDS, ALIAS, setRunner, showTab, chartHover, chartRedraw } from './cmds.js';
 import { setExtraRunner, aliasOf, counted, stopTop } from './extra.js';
 import * as SG from './signer.js';
-import { createV01d, DISTRICTS } from '../v01d-3d.js?v=7';
+import { createV01d, DISTRICTS } from '../v01d-3d.js?v=8';
 import { DIST, manual } from './districts.js';
 import { initPrompt } from './prompt.js';
 import { createScore } from './score.js?v=2';
